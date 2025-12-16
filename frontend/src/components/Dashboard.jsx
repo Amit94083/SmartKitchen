@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { restaurantService } from '../services/api';
-import { Restaurant } from '../types/auth';
 import RestaurantForm from './RestaurantForm';
 
-const Dashboard: React.FC = () => {
+const Dashboard = () => {
   const { owner, logout } = useAuth();
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'restaurant'>('overview');
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     fetchRestaurant();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRestaurant = async () => {
@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleRestaurantSubmit = async (restaurantData: Partial<Restaurant>) => {
+  const handleRestaurantSubmit = async (restaurantData) => {
     try {
       setSaving(true);
       let updatedRestaurant;
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
       
       // Clear message after 5 seconds
       setTimeout(() => setMessage(null), 5000);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to save restaurant:', error);
       setMessage({ 
         type: 'error', 

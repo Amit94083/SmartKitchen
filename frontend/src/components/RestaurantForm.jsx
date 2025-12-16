@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Restaurant } from '../types/auth';
 
-interface RestaurantFormProps {
-  restaurant?: Restaurant;
-  onSubmit: (restaurantData: Partial<Restaurant>) => Promise<void>;
-  isLoading?: boolean;
-}
-
-const RestaurantForm: React.FC<RestaurantFormProps> = ({ 
+const RestaurantForm = ({ 
   restaurant, 
   onSubmit, 
   isLoading = false 
@@ -22,7 +15,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
     isOpen: true
   });
 
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (restaurant) {
@@ -38,9 +31,9 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
     }
   }, [restaurant]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e) => {
     const { name, value, type } = e.target;
-    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+    const checked = type === 'checkbox' ? e.target.checked : undefined;
     
     setFormData(prev => ({
       ...prev,
@@ -49,17 +42,17 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev: any) => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
     try {
       await onSubmit(formData);
-    } catch (err: any) {
+    } catch (err) {
       if (err.response?.data && typeof err.response.data === 'object') {
         setErrors(err.response.data);
       } else {

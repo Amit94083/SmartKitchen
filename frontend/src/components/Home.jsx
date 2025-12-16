@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { restaurantService } from '../services/api';
-import { Restaurant } from '../types/auth';
 import { useAuth } from '../context/AuthContext';
 
-const Home: React.FC = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+const Home = () => {
+  const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const { customer, logout } = useAuth();
 

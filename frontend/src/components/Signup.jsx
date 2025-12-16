@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const Signup: React.FC = () => {
+const Signup = () => {
   const [formData, setFormData] = useState({
     restaurantName: '',
     ownerName: '',
@@ -18,14 +18,14 @@ const Signup: React.FC = () => {
   const { loginOwner } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
@@ -39,9 +39,9 @@ const Signup: React.FC = () => {
     try {
       const { confirmPassword, ...signupData } = formData;
       const response = await authService.ownerSignup(signupData);
-      loginOwner(response.token, response.owner!);
+      loginOwner(response.token, response.owner);
       navigate('/dashboard');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Signup error:', err);
       console.error('Error response:', err.response);
       console.error('Error status:', err.response?.status);

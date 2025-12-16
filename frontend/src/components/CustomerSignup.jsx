@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const CustomerSignup: React.FC = () => {
+const CustomerSignup = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,30 +11,30 @@ const CustomerSignup: React.FC = () => {
     phone: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState({});
   
   const { loginCustomer } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev: any) => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setErrors({});
 
     try {
       const response = await authService.customerSignup(formData);
-      loginCustomer(response.token, response.customer!);
+      loginCustomer(response.token, response.customer);
       navigate('/home');
-    } catch (err: any) {
+    } catch (err) {
       if (err.response?.data && typeof err.response.data === 'object') {
         setErrors(err.response.data);
       } else {

@@ -3,25 +3,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const Login: React.FC = () => {
+const CustomerLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { loginOwner } = useAuth();
+  const { loginCustomer } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await authService.ownerLogin({ email, password });
-      loginOwner(response.token, response.owner!);
-      navigate('/dashboard');
-    } catch (err: any) {
+      const response = await authService.customerLogin({ email, password });
+      loginCustomer(response.token, response.customer);
+      navigate('/home');
+    } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
             Smart Kitchen
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your restaurant account
+            Sign in to explore restaurants
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -47,7 +47,7 @@ const Login: React.FC = () => {
                 name="email"
                 type="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -59,7 +59,7 @@ const Login: React.FC = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -77,7 +77,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
@@ -87,18 +87,18 @@ const Login: React.FC = () => {
             <span className="text-sm text-gray-600">
               Don't have an account?{' '}
               <Link
-                to="/signup"
-                className="font-medium text-primary-600 hover:text-primary-500"
+                to="/customer/signup"
+                className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Sign up here
               </Link>
             </span>
             <div className="text-sm">
               <Link
-                to="/customer/login"
+                to="/login"
                 className="font-medium text-gray-600 hover:text-gray-500"
               >
-                Are you a customer? Login here
+                Are you a restaurant owner? Login here
               </Link>
             </div>
           </div>
@@ -108,4 +108,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default CustomerLogin;

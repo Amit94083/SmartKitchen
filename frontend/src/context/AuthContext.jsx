@@ -1,18 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Owner, Customer } from '../types/auth';
 
-interface AuthContextType {
-  owner: Owner | null;
-  customer: Customer | null;
-  token: string | null;
-  userType: 'owner' | 'customer' | null;
-  loginOwner: (token: string, owner: Owner) => void;
-  loginCustomer: (token: string, customer: Customer) => void;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -22,15 +10,11 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [owner, setOwner] = useState<Owner | null>(null);
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [userType, setUserType] = useState<'owner' | 'customer' | null>(null);
+export const AuthProvider = ({ children }) => {
+  const [token, setToken] = useState(null);
+  const [owner, setOwner] = useState(null);
+  const [customer, setCustomer] = useState(null);
+  const [userType, setUserType] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -40,7 +24,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     if (storedToken && storedUserType) {
       setToken(storedToken);
-      setUserType(storedUserType as 'owner' | 'customer');
+      setUserType(storedUserType);
       
       if (storedUserType === 'owner' && storedOwner) {
         setOwner(JSON.parse(storedOwner));
@@ -50,7 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const loginOwner = (newToken: string, newOwner: Owner) => {
+  const loginOwner = (newToken, newOwner) => {
     setToken(newToken);
     setOwner(newOwner);
     setCustomer(null);
@@ -61,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('customer');
   };
 
-  const loginCustomer = (newToken: string, newCustomer: Customer) => {
+  const loginCustomer = (newToken, newCustomer) => {
     setToken(newToken);
     setCustomer(newCustomer);
     setOwner(null);
@@ -83,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('userType');
   };
 
-  const value: AuthContextType = {
+  const value = {
     owner,
     customer,
     token,
