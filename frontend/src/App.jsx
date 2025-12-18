@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+
 import LandingPage from './components/LandingPage';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -9,6 +10,7 @@ import CustomerSignup from './components/CustomerSignup';
 import Dashboard from './components/Dashboard';
 import Home from './components/Home';
 import ProtectedRoute from './components/ProtectedRoute';
+import Restaurant from './components/Restaurant';
 
 const AppRoutes = () => {
   const { isAuthenticated, userType } = useAuth();
@@ -20,64 +22,51 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Landing page */}
-      <Route 
-        path="/" 
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <LandingPage />} 
-      />
+      <Route path="/" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <LandingPage />} />
 
-      {/* Restaurant Owner Routes */}
-      <Route 
-        path="/login" 
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Login />} 
-      />
-      <Route 
-        path="/signup" 
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Signup />} 
-      />
-      <Route 
-        path="/dashboard" 
+      {/* Owner */}
+      <Route path="/login" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Login />} />
+      <Route path="/signup" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Signup />} />
+      <Route
+        path="/dashboard"
         element={
           <ProtectedRoute requiresOwner>
             <Dashboard />
           </ProtectedRoute>
-        } 
+        }
       />
 
-      {/* Customer Routes */}
-      <Route 
-        path="/customer/login" 
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <CustomerLogin />} 
-      />
-      <Route 
-        path="/customer/signup" 
-        element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <CustomerSignup />} 
-      />
-      <Route 
-        path="/home" 
+      {/* Customer */}
+      <Route path="/customer/login" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <CustomerLogin />} />
+      <Route path="/customer/signup" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <CustomerSignup />} />
+      <Route
+        path="/home"
         element={
           <ProtectedRoute requiresCustomer>
             <Home />
           </ProtectedRoute>
-        } 
+        }
+      />
+      <Route
+        path="/restaurant/:id"
+        element={
+          <ProtectedRoute requiresCustomer>
+            <Restaurant />
+          </ProtectedRoute>
+        }
       />
 
-      {/* Catch all route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
 
-function App() {
+export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="App">
-          <AppRoutes />
-        </div>
+        <AppRoutes />
       </Router>
     </AuthProvider>
   );
 }
-
-export default App;

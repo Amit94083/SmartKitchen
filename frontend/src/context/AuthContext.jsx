@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [userType, setUserType] = useState(null);
 
   useEffect(() => {
+    localStorage.clear()
     const storedToken = localStorage.getItem('token');
     const storedOwner = localStorage.getItem('owner');
     const storedCustomer = localStorage.getItem('customer');
