@@ -10,7 +10,7 @@ const App = () => {
   // Function to send WhatsApp message
   const sendWhatsAppMessage = async () => {
     const payload = {
-      to: "+919104975168",
+      to: "+919408332168",
       template: {
         name: "hello_world",
         language: {
