@@ -1,11 +1,14 @@
 package com.smartkitchen.whatsapp.dto;
 
-import java.util.List;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class MessageTemplate {
+    @NotBlank(message = "Template name is required")
     private String name;
+    
+    @NotNull(message = "Template language is required")
     private TemplateLanguage language;
-    private List<TemplateComponent> components;
     
     public MessageTemplate() {}
     
@@ -30,20 +33,11 @@ public class MessageTemplate {
         this.language = language;
     }
     
-    public List<TemplateComponent> getComponents() {
-        return components;
-    }
-    
-    public void setComponents(List<TemplateComponent> components) {
-        this.components = components;
-    }
-    
     @Override
     public String toString() {
         return "MessageTemplate{" +
                 "name='" + name + '\'' +
                 ", language=" + language +
-                ", components=" + components +
                 '}';
     }
 }

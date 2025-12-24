@@ -6,7 +6,7 @@ import MenuSection from "./MenuSection";
 export default function Restaurant() {
   const { id } = useParams();
 
-  // ✅ ADD STATE HERE
+ 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 

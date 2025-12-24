@@ -21,7 +21,7 @@ public class CustomerDto {
         this.createdAt = customer.getCreatedAt();
     }
     
-    // Getters and Setters
+    
     public Long getId() {
         return id;
     }

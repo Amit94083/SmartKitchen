@@ -13,7 +13,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchRestaurant();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRestaurant = async () => {
@@ -57,7 +56,7 @@ const Dashboard = () => {
         type: 'error', 
         text: error.response?.data?.message || 'Failed to save restaurant details. Please try again.' 
       });
-      throw error; // Re-throw to let RestaurantForm handle field errors
+      throw error; 
     } finally {
       setSaving(false);
     }

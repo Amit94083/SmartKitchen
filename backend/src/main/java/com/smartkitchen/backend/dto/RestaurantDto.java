@@ -33,7 +33,7 @@ public class RestaurantDto {
         this.createdAt = restaurant.getCreatedAt();
     }
     
-    // Getters and Setters
+   
     public Long getId() {
         return id;
     }

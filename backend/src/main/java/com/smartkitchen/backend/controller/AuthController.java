@@ -58,7 +58,7 @@ public class AuthController {
         }
     }
     
-    // Error response classes
+    
     public static class ErrorResponse {
         private String message;
         

@@ -32,7 +32,7 @@ public class CustomerSignupRequest {
         this.phone = phone;
     }
     
-    // Getters and Setters
+    
     public String getName() {
         return name;
     }

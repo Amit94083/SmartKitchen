@@ -13,10 +13,10 @@ public class OwnerDto {
     private String phone;
     private LocalDateTime createdAt;
     
-    // Default constructor
+   
     public OwnerDto() {}
     
-    // Constructor from Owner entity
+    
     public OwnerDto(Owner owner) {
         this.id = owner.getId();
         this.restaurantName = owner.getRestaurantName();
@@ -26,7 +26,7 @@ public class OwnerDto {
         this.createdAt = owner.getCreatedAt();
     }
     
-    // Getters and Setters
+    
     public Long getId() {
         return id;
     }

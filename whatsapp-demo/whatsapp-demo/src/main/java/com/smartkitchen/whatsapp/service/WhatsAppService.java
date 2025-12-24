@@ -6,6 +6,7 @@ import com.smartkitchen.whatsapp.dto.WhatsAppMessageRequest;
 import com.smartkitchen.whatsapp.dto.WhatsAppMessageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -32,12 +33,23 @@ public class WhatsAppService {
     }
     
     public Mono<WhatsAppMessageResponse> sendMessage(WhatsAppMessageRequest request) {
-        logger.info("Sending WhatsApp message to: {}", request.getTo());
+        // Set MDC for structured logging
+        MDC.put("phoneNumber", request.getTo());
+        MDC.put("templateName", request.getTemplate() != null ? request.getTemplate().getName() : "unknown");
+        MDC.put("operation", "sendMessage");
+        
+        logger.info("Starting WhatsApp message send process", 
+            "to", request.getTo(),
+            "templateName", request.getTemplate().getName(),
+            "language", request.getTemplate().getLanguage().getCode());
         
         // Validate configuration
         if (whatsAppConfig.getAccessToken() == null || whatsAppConfig.getPhoneNumberId() == null) {
-            logger.error("WhatsApp configuration is incomplete");
-            return Mono.just(WhatsAppMessageResponse.error("WhatsApp configuration is incomplete", request.getTo()));
+            logger.error("WhatsApp configuration validation failed",
+                "accessTokenPresent", whatsAppConfig.getAccessToken() != null,
+                "phoneNumberIdPresent", whatsAppConfig.getPhoneNumberId() != null);
+            return Mono.just(WhatsAppMessageResponse.error("WhatsApp configuration is incomplete", request.getTo()))
+                .doFinally(signal -> MDC.clear());
         }
         
         // Prepare the message payload according to Meta WhatsApp API format
@@ -59,29 +71,22 @@ public class WhatsAppService {
     }
     
     private Map<String, Object> createMessagePayload(WhatsAppMessageRequest request) {
+        logger.debug("Creating message payload for template message");
+        
         Map<String, Object> payload = new HashMap<>();
         payload.put("messaging_product", "whatsapp");
         payload.put("to", request.getTo());
-        payload.put("type", request.getType());
+        payload.put("type", "template");
         
-        if ("text".equals(request.getType())) {
-            // Text message
-            if (request.getMessage() == null || request.getMessage().trim().isEmpty()) {
-                throw new IllegalArgumentException("Message content is required for text messages");
-            }
-            Map<String, String> text = new HashMap<>();
-            text.put("body", request.getMessage());
-            payload.put("text", text);
-        } else if ("template".equals(request.getType())) {
-            // Template message
-            if (request.getTemplate() == null) {
-                throw new IllegalArgumentException("Template is required for template messages");
-            }
-            payload.put("template", createTemplatePayload(request.getTemplate()));
-        } else {
-            throw new IllegalArgumentException("Unsupported message type: " + request.getType());
+        if (request.getTemplate() == null) {
+            logger.error("Template validation failed - template is null");
+            throw new IllegalArgumentException("Template is required");
         }
         
+        Map<String, Object> templatePayload = createTemplatePayload(request.getTemplate());
+        payload.put("template", templatePayload);
+        
+        logger.debug("Message payload created successfully", "templateName", request.getTemplate().getName());
         return payload;
     }
     
@@ -93,10 +98,6 @@ public class WhatsAppService {
             Map<String, String> language = new HashMap<>();
             language.put("code", template.getLanguage().getCode());
             templatePayload.put("language", language);
-        }
-        
-        if (template.getComponents() != null && !template.getComponents().isEmpty()) {
-            templatePayload.put("components", template.getComponents());
         }
         
         return templatePayload;
@@ -132,8 +133,14 @@ public class WhatsAppService {
     }
     
     private Mono<WhatsAppMessageResponse> handleGenericError(Exception ex, String to) {
-        logger.error("Unexpected error while sending message", ex);
-        return Mono.just(WhatsAppMessageResponse.error("Unexpected error: " + ex.getMessage(), to));
+        logger.error("Unexpected error occurred during WhatsApp message processing", 
+            "exceptionType", ex.getClass().getSimpleName(),
+            "errorMessage", ex.getMessage(),
+            "phoneNumber", to,
+            "stackTrace", ex.getStackTrace()[0].toString());
+        
+        return Mono.just(WhatsAppMessageResponse.error(
+            "Service temporarily unavailable: " + ex.getClass().getSimpleName(), to));
     }
     
     public Mono<Boolean> validateWebhook(String mode, String token, String challenge) {

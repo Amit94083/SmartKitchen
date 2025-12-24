@@ -26,10 +26,10 @@ public class SignupRequest {
     @Size(max = 20)
     private String phone;
     
-    // Default constructor
+    
     public SignupRequest() {}
     
-    // Constructor
+    
     public SignupRequest(String restaurantName, String ownerName, String email, String password, String phone) {
         this.restaurantName = restaurantName;
         this.ownerName = ownerName;
@@ -38,7 +38,7 @@ public class SignupRequest {
         this.phone = phone;
     }
     
-    // Getters and Setters
+   
     public String getRestaurantName() {
         return restaurantName;
     }

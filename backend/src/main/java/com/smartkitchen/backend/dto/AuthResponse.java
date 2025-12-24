@@ -6,24 +6,24 @@ public class AuthResponse {
     private OwnerDto owner;
     private CustomerDto customer;
     
-    // Default constructor
+    
     public AuthResponse() {}
     
-    // Constructor for owner
+    
     public AuthResponse(String token, OwnerDto owner) {
         this.token = token;
         this.owner = owner;
         this.customer = null;
     }
     
-    // Constructor for customer
+   
     public AuthResponse(String token, OwnerDto owner, CustomerDto customer) {
         this.token = token;
         this.owner = owner;
         this.customer = customer;
     }
     
-    // Getters and Setters
+    
     public String getToken() {
         return token;
     }
