@@ -19,6 +19,7 @@ const RestaurantForm = ({
   useEffect(() => {
     if (restaurant) {
       setFormData({
+        name: restaurant.name || '',
         description: restaurant.description || '',
         address: restaurant.address || '',
         phone: restaurant.phone || '',

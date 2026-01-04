@@ -42,8 +42,20 @@ const Dashboard = () => {
         updatedRestaurant = await restaurantService.updateRestaurant(restaurantData, user.email);
         setMessage({ type: 'success', text: 'Restaurant details updated successfully!' });
       } else {
-        updatedRestaurant = await restaurantService.createRestaurant(restaurantData, user.email);
-        setMessage({ type: 'success', text: 'Restaurant details added successfully!' });
+        try {
+          updatedRestaurant = await restaurantService.createRestaurant(restaurantData, user.email);
+          setMessage({ type: 'success', text: 'Restaurant details added successfully!' });
+        } catch (createErr) {
+          const msg = createErr.response?.data?.message || '';
+          const alreadyHasRestaurant = msg.toLowerCase().includes('already has a restaurant');
+          if (alreadyHasRestaurant) {
+            // If backend says restaurant exists, switch to update flow
+            updatedRestaurant = await restaurantService.updateRestaurant(restaurantData, user.email);
+            setMessage({ type: 'success', text: 'Restaurant exists; updated details instead.' });
+          } else {
+            throw createErr;
+          }
+        }
       }
 
       setRestaurant(updatedRestaurant);
