@@ -13,15 +13,16 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+    setLoading(false);
   }, []);
 
   const login = (newToken, newUser) => {
@@ -46,11 +47,12 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!token && !!user,
     isCustomer: user?.userType === 'CUSTOMER',
     isRestaurantOwner: user?.userType === 'RESTAURANT_OWNER',
+    loading,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {loading ? null : children}
     </AuthContext.Provider>
   );
 };

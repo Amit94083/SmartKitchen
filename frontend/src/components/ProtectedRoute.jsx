@@ -7,8 +7,12 @@ const ProtectedRoute = ({
   requiresOwner = false,
   requiresCustomer = false 
 }) => {
-  const { isAuthenticated, isCustomer, isRestaurantOwner } = useAuth();
-  
+  const { isAuthenticated, isCustomer, isRestaurantOwner, loading } = useAuth();
+
+  if (loading) {
+    return null; // or a spinner if you want
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -20,7 +24,7 @@ const ProtectedRoute = ({
   if (requiresCustomer && !isCustomer) {
     return <Navigate to="/" replace />;
   }
-  
+
   return <>{children}</>;
 };
 

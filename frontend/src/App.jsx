@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import LandingPage from './components/LandingPage';
+import Profile from './components/Profile';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import CustomerLogin from './components/CustomerLogin';
@@ -54,6 +55,16 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiresCustomer>
             <Restaurant />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Profile Page */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />
