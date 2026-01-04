@@ -1,3 +1,5 @@
+import { imageMap } from "../assets/food";
+
 export default function FoodCard({ item }) {
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden">
@@ -5,7 +7,7 @@ export default function FoodCard({ item }) {
       {/* IMAGE CONTAINER WITH ASPECT RATIO */}
       <div className="relative w-full aspect-[4/3] overflow-hidden">
         <img
-          src={item.image}
+          src={imageMap[item.imageUrl] || item.imageUrl || item.image}
           alt={item.name}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
         />

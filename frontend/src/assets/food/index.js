@@ -39,6 +39,42 @@ import TandooriPaneerSandwich from "./sandwich/TandooriPaneerSandwich.jpg";
 import ToastButter from "./sandwich/ToastButter.jpeg";
 import VegSandwich from "./sandwich/VegSandwich.jpg";
 
+export const imageMap = {
+  "FarmFreshPizza.jpg": FarmFreshPizza,
+  "MexicanDelightPizza.jpg": MexicanDelightPizza,
+  "MargheritaPizza.jpg": MargheritaPizza,
+  "SpecialPizza.jpg": SpecialPizza,
+  "PannerPizza.jpg": PannerPizza,
+  "TomatoPizza.jpg": TomatoPizza,
+  "SupremeGarlicBread.png": SupremeGarlicBread,
+  "CheeseCornGarlicBread.png": CheeseCornGarlicBread,
+  "CheeseJalapenoGarlicBread.jpeg": CheeseJalapenoGarlicBread,
+  "CheesePaneerGarlicBread.png": CheesePaneerGarlicBread,
+  "AlooMutterSandwich.jpg": AlooMutterSandwich,
+  "ChocolateSandwich.jpeg": ChocolateSandwich,
+  "BreadButter.jpeg": BreadButter,
+  "VegSandwich.jpg": VegSandwich,
+  "PineappleSandwich.jpeg": PineappleSandwich,
+  "ToastButter.jpeg": ToastButter,
+  "JungleMungleSandwich.jpeg": JungleMungleSandwich,
+  "TandooriPaneerSandwich.jpg": TandooriPaneerSandwich,
+  "Veg.CheeseBurger.jpeg": VegCheeseBurger,
+  "AlooTikkiBurger.jpeg": AlooTikkiBurger,
+  "FrenchFries.jpeg": FrenchFries,
+  "CheesyFries.jpeg": CheesyFries,
+  "PeriPeriFries.jpeg": PeriPeriFries,
+  "PizzaFries.jpeg": PizzaFries,
+  "SimpleMaggi.png": SimpleMaggi,
+  "MasalaMaggi.png": MasalaMaggi,
+  "ChezzeMaggi.png": CheezeMaggi,
+  "DahiPuri.png": DahiPuri,
+  "SevPuri.png": SevPuri,
+  "Bhel.jpeg": Bhel,
+  "VanillaMilkshake.png": VanillaMilkshake,
+  "StrawberryMilkshake.png": StrawberryMilkshake,
+  "ChoclateMilkshake.png": ChocolateMilkshake,
+};
+
 export {
 
   AlooTikkiBurger,
