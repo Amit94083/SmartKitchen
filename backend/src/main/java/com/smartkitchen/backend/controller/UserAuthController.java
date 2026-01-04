@@ -1,9 +1,9 @@
 package com.smartkitchen.backend.controller;
 
 import com.smartkitchen.backend.dto.AuthResponse;
-import com.smartkitchen.backend.dto.CustomerSignupRequest;
-import com.smartkitchen.backend.dto.LoginRequest;
-import com.smartkitchen.backend.service.CustomerAuthService;
+import com.smartkitchen.backend.dto.UserLoginRequest;
+import com.smartkitchen.backend.dto.UserSignupRequest;
+import com.smartkitchen.backend.service.UserAuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,15 +15,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/customer/auth")
+@RequestMapping("/api/user/auth")
 @CrossOrigin(origins = "http://localhost:3000")
-public class CustomerAuthController {
+public class UserAuthController {
     
     @Autowired
-    private CustomerAuthService customerAuthService;
+    private UserAuthService userAuthService;
     
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody CustomerSignupRequest signupRequest, BindingResult bindingResult) {
+    public ResponseEntity<?> signup(@Valid @RequestBody UserSignupRequest signupRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
@@ -33,7 +33,7 @@ public class CustomerAuthController {
         }
         
         try {
-            AuthResponse authResponse = customerAuthService.signup(signupRequest);
+            AuthResponse authResponse = userAuthService.signup(signupRequest);
             return ResponseEntity.ok(authResponse);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -43,7 +43,7 @@ public class CustomerAuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, BindingResult bindingResult) {
+    public ResponseEntity<?> login(@Valid @RequestBody UserLoginRequest loginRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
@@ -53,12 +53,19 @@ public class CustomerAuthController {
         }
         
         try {
-            AuthResponse authResponse = customerAuthService.login(loginRequest);
+            AuthResponse authResponse = userAuthService.login(loginRequest);
             return ResponseEntity.ok(authResponse);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Logout successful");
+        return ResponseEntity.ok(response);
     }
 }

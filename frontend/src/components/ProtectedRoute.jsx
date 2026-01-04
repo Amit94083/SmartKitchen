@@ -7,17 +7,17 @@ const ProtectedRoute = ({
   requiresOwner = false,
   requiresCustomer = false 
 }) => {
-  const { isAuthenticated, userType } = useAuth();
+  const { isAuthenticated, isCustomer, isRestaurantOwner } = useAuth();
   
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  if (requiresOwner && userType !== 'owner') {
+  if (requiresOwner && !isRestaurantOwner) {
     return <Navigate to="/" replace />;
   }
 
-  if (requiresCustomer && userType !== 'customer') {
+  if (requiresCustomer && !isCustomer) {
     return <Navigate to="/" replace />;
   }
   

@@ -3,27 +3,24 @@ package com.smartkitchen.backend.dto;
 public class AuthResponse {
     
     private String token;
-    private OwnerDto owner;
-    private CustomerDto customer;
-    
+    private UserDto user;
+    private String message;
     
     public AuthResponse() {}
     
-    
-    public AuthResponse(String token, OwnerDto owner) {
+    public AuthResponse(String token, UserDto user) {
         this.token = token;
-        this.owner = owner;
-        this.customer = null;
+        this.user = user;
+        this.message = "Authentication successful";
     }
     
-   
-    public AuthResponse(String token, OwnerDto owner, CustomerDto customer) {
+    public AuthResponse(String token, UserDto user, String message) {
         this.token = token;
-        this.owner = owner;
-        this.customer = customer;
+        this.user = user;
+        this.message = message;
     }
     
-    
+    // Getters and Setters
     public String getToken() {
         return token;
     }
@@ -32,19 +29,19 @@ public class AuthResponse {
         this.token = token;
     }
     
-    public OwnerDto getOwner() {
-        return owner;
+    public UserDto getUser() {
+        return user;
     }
     
-    public void setOwner(OwnerDto owner) {
-        this.owner = owner;
+    public void setUser(UserDto user) {
+        this.user = user;
     }
     
-    public CustomerDto getCustomer() {
-        return customer;
+    public String getMessage() {
+        return message;
     }
     
-    public void setCustomer(CustomerDto customer) {
-        this.customer = customer;
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

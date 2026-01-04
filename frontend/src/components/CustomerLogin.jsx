@@ -9,7 +9,7 @@ const CustomerLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { loginCustomer } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -18,8 +18,12 @@ const CustomerLogin = () => {
     setError('');
 
     try {
-      const response = await authService.customerLogin({ email, password });
-      loginCustomer(response.token, response.customer);
+      const response = await authService.login({ 
+        email, 
+        password, 
+        userType: 'CUSTOMER' 
+      });
+      login(response.token, response.user);
       navigate('/home');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

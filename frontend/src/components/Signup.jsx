@@ -6,16 +6,17 @@ import { useAuth } from '../context/AuthContext';
 const Signup = () => {
   const [formData, setFormData] = useState({
     restaurantName: '',
-    ownerName: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone: '',
+    userType: 'RESTAURANT_OWNER',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { loginOwner } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -38,8 +39,8 @@ const Signup = () => {
 
     try {
       const { confirmPassword, ...signupData } = formData;
-      const response = await authService.ownerSignup(signupData);
-      loginOwner(response.token, response.owner);
+      const response = await authService.signup(signupData);
+      login(response.token, response.user);
       navigate('/dashboard');
     } catch (err) {
       console.error('Signup error:', err);
@@ -82,17 +83,17 @@ const Signup = () => {
             </div>
             
             <div>
-              <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Owner Name
               </label>
               <input
-                id="ownerName"
-                name="ownerName"
+                id="name"
+                name="name"
                 type="text"
                 required
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Enter your full name"
-                value={formData.ownerName}
+                value={formData.name}
                 onChange={handleChange}
               />
             </div>

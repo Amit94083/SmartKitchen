@@ -9,7 +9,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { loginOwner } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -18,8 +18,12 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await authService.ownerLogin({ email, password });
-      loginOwner(response.token, response.owner);
+      const response = await authService.login({ 
+        email, 
+        password, 
+        userType: 'RESTAURANT_OWNER' 
+      });
+      login(response.token, response.user);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

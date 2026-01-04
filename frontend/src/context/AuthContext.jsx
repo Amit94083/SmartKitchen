@@ -12,72 +12,45 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
-  const [owner, setOwner] = useState(null);
-  const [customer, setCustomer] = useState(null);
-  const [userType, setUserType] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    localStorage.clear()
     const storedToken = localStorage.getItem('token');
-    const storedOwner = localStorage.getItem('owner');
-    const storedCustomer = localStorage.getItem('customer');
-    const storedUserType = localStorage.getItem('userType');
+    const storedUser = localStorage.getItem('user');
     
-    if (storedToken && storedUserType) {
+    if (storedToken && storedUser) {
       setToken(storedToken);
-      setUserType(storedUserType);
-      
-      if (storedUserType === 'owner' && storedOwner) {
-        setOwner(JSON.parse(storedOwner));
-      } else if (storedUserType === 'customer' && storedCustomer) {
-        setCustomer(JSON.parse(storedCustomer));
-      }
+      setUser(JSON.parse(storedUser));
     }
   }, []);
 
-  const loginOwner = (newToken, newOwner) => {
+  const login = (newToken, newUser) => {
     setToken(newToken);
-    setOwner(newOwner);
-    setCustomer(null);
-    setUserType('owner');
+    setUser(newUser);
     localStorage.setItem('token', newToken);
-    localStorage.setItem('owner', JSON.stringify(newOwner));
-    localStorage.setItem('userType', 'owner');
-    localStorage.removeItem('customer');
-  };
-
-  const loginCustomer = (newToken, newCustomer) => {
-    setToken(newToken);
-    setCustomer(newCustomer);
-    setOwner(null);
-    setUserType('customer');
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('customer', JSON.stringify(newCustomer));
-    localStorage.setItem('userType', 'customer');
-    localStorage.removeItem('owner');
+    localStorage.setItem('user', JSON.stringify(newUser));
   };
 
   const logout = () => {
     setToken(null);
-    setOwner(null);
-    setCustomer(null);
-    setUserType(null);
+    setUser(null);
     localStorage.removeItem('token');
-    localStorage.removeItem('owner');
-    localStorage.removeItem('customer');
-    localStorage.removeItem('userType');
+    localStorage.removeItem('user');
   };
 
   const value = {
-    owner,
-    customer,
+    user,
     token,
-    userType,
-    loginOwner,
-    loginCustomer,
+    login,
     logout,
-    isAuthenticated: !!token && (!!owner || !!customer),
+    isAuthenticated: !!token && !!user,
+    isCustomer: user?.userType === 'CUSTOMER',
+    isRestaurantOwner: user?.userType === 'RESTAURANT_OWNER',
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

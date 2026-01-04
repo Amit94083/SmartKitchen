@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenProvider jwtTokenProvider;
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
@@ -28,8 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
             
-            if (StringUtils.hasText(jwt) && jwtUtil.validateToken(jwt)) {
-                String email = jwtUtil.getEmailFromToken(jwt);
+            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+                String email = jwtTokenProvider.getEmailFromToken(jwt);
+                String userType = jwtTokenProvider.getUserTypeFromToken(jwt);
                 
                 // Create authentication token
                 UsernamePasswordAuthenticationToken authentication = 

@@ -4,7 +4,7 @@ import { restaurantService } from '../services/api';
 import RestaurantForm from './RestaurantForm';
 
 const Dashboard = () => {
-  const { owner, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,8 +18,8 @@ const Dashboard = () => {
   const fetchRestaurant = async () => {
     try {
       setLoading(true);
-      if (owner?.email) {
-        const restaurantData = await restaurantService.getMyRestaurant(owner.email);
+      if (user?.email) {
+        const restaurantData = await restaurantService.getMyRestaurant(user.email);
         setRestaurant(restaurantData);
       }
     } catch (error) {
@@ -34,15 +34,15 @@ const Dashboard = () => {
       setSaving(true);
       let updatedRestaurant;
 
-      if (!owner?.email) {
-        throw new Error('Owner email not found');
+      if (!user?.email) {
+        throw new Error('User email not found');
       }
 
       if (restaurant) {
-        updatedRestaurant = await restaurantService.updateRestaurant(restaurantData, owner.email);
+        updatedRestaurant = await restaurantService.updateRestaurant(restaurantData, user.email);
         setMessage({ type: 'success', text: 'Restaurant details updated successfully!' });
       } else {
-        updatedRestaurant = await restaurantService.createRestaurant(restaurantData, owner.email);
+        updatedRestaurant = await restaurantService.createRestaurant(restaurantData, user.email);
         setMessage({ type: 'success', text: 'Restaurant details added successfully!' });
       }
 
@@ -77,7 +77,7 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
-                Welcome, {owner?.ownerName}
+                Welcome, {user?.name}
               </span>
               <button
                 onClick={handleLogout}
@@ -158,10 +158,10 @@ const Dashboard = () => {
                     <div>
                       <h3 className="text-lg font-medium text-gray-900 mb-3">Owner Information</h3>
                       <div className="space-y-2 text-sm text-gray-600">
-                        <p><span className="font-medium">Owner Name:</span> {owner?.ownerName}</p>
-                        <p><span className="font-medium">Email:</span> {owner?.email}</p>
-                        {owner?.phone && (
-                          <p><span className="font-medium">Phone:</span> {owner.phone}</p>
+                        <p><span className="font-medium">Owner Name:</span> {user?.name}</p>
+                        <p><span className="font-medium">Email:</span> {user?.email}</p>
+                        {user?.phone && (
+                          <p><span className="font-medium">Phone:</span> {user.phone}</p>
                         )}
                       </div>
                     </div>

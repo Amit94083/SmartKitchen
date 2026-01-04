@@ -13,11 +13,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Restaurant from './components/Restaurant';
 
 const AppRoutes = () => {
-  const { isAuthenticated, userType } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const getDefaultRoute = () => {
     if (!isAuthenticated) return '/';
-    return userType === 'owner' ? '/dashboard' : '/home';
+    if (user?.userType === 'RESTAURANT_OWNER') return '/dashboard';
+    if (user?.userType === 'CUSTOMER') return '/home';
+    return '/';
   };
 
   return (

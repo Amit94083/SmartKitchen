@@ -1,65 +1,46 @@
-package com.smartkitchen.backend.entity;
+package com.smartkitchen.backend.dto;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
-
-@Entity
-@Table(name = "customers")
-public class Customer {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class UserSignupRequest {
     
     @NotBlank(message = "Name is required")
-    @Size(max = 255)
-    @Column(name = "name", nullable = false)
+    @Size(max = 255, message = "Name must be less than 255 characters")
     private String name;
     
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is required")
-    @Size(max = 255)
-    @Column(name = "email", nullable = false, unique = true)
+    @Size(max = 255, message = "Email must be less than 255 characters")
     private String email;
     
     @NotBlank(message = "Password is required")
-    @Size(max = 255)
-    @Column(name = "password", nullable = false)
+    @Size(min = 6, max = 255, message = "Password must be between 6 and 255 characters")
     private String password;
     
-    @Size(max = 20)
-    @Column(name = "phone")
+    @Size(max = 20, message = "Phone must be less than 20 characters")
     private String phone;
     
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @NotBlank(message = "User type is required")
+    private String userType; // "CUSTOMER" or "RESTAURANT_OWNER"
     
-    // Default constructor
-    public Customer() {}
+    // For restaurant owners
+    @Size(max = 255, message = "Restaurant name must be less than 255 characters")
+    private String restaurantName;
     
-    // Constructor with fields
-    public Customer(String name, String email, String password, String phone) {
+    public UserSignupRequest() {}
+    
+    public UserSignupRequest(String name, String email, String password, String phone, String userType, String restaurantName) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.phone = phone;
+        this.userType = userType;
+        this.restaurantName = restaurantName;
     }
     
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
     public String getName() {
         return name;
     }
@@ -92,11 +73,19 @@ public class Customer {
         this.phone = phone;
     }
     
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public String getUserType() {
+        return userType;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setUserType(String userType) {
+        this.userType = userType;
+    }
+    
+    public String getRestaurantName() {
+        return restaurantName;
+    }
+    
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
     }
 }

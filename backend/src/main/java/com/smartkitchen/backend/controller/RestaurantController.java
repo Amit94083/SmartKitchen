@@ -28,11 +28,6 @@ public class RestaurantController {
         return ResponseEntity.ok(restaurants);
     }
     
-    @GetMapping("/cuisine/{cuisineType}")
-    public ResponseEntity<List<RestaurantDto>> getRestaurantsByCuisine(@PathVariable String cuisineType) {
-        List<RestaurantDto> restaurants = restaurantService.getRestaurantsByCuisine(cuisineType);
-        return ResponseEntity.ok(restaurants);
-    }
     
     @GetMapping("/search")
     public ResponseEntity<List<RestaurantDto>> searchRestaurants(@RequestParam String name) {

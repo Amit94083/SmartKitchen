@@ -10,7 +10,6 @@ const RestaurantForm = ({
     description: '',
     address: '',
     phone: '',
-    cuisineType: '',
     imageUrl: '',
     isOpen: true
   });
@@ -20,11 +19,9 @@ const RestaurantForm = ({
   useEffect(() => {
     if (restaurant) {
       setFormData({
-        name: restaurant.name || '',
         description: restaurant.description || '',
         address: restaurant.address || '',
         phone: restaurant.phone || '',
-        cuisineType: restaurant.cuisineType || '',
         imageUrl: restaurant.imageUrl || '',
         isOpen: restaurant.isOpen ?? true
       });
@@ -34,7 +31,7 @@ const RestaurantForm = ({
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     const checked = type === 'checkbox' ? e.target.checked : undefined;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -61,17 +58,12 @@ const RestaurantForm = ({
     }
   };
 
-  const cuisineOptions = [
-    'Italian', 'Chinese', 'Japanese', 'Mexican', 'Indian', 'American', 
-    'French', 'Thai', 'Mediterranean', 'Korean', 'Vietnamese', 'Other'
-  ];
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">
         {restaurant ? 'Update Restaurant Details' : 'Add Restaurant Details'}
       </h2>
-      
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Restaurant Name */}
         <div>
@@ -150,27 +142,6 @@ const RestaurantForm = ({
           )}
         </div>
 
-        {/* Cuisine Type */}
-        <div>
-          <label htmlFor="cuisineType" className="block text-sm font-medium text-gray-700 mb-2">
-            Cuisine Type
-          </label>
-          <select
-            id="cuisineType"
-            name="cuisineType"
-            value={formData.cuisineType}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select cuisine type</option>
-            {cuisineOptions.map(cuisine => (
-              <option key={cuisine} value={cuisine}>{cuisine}</option>
-            ))}
-          </select>
-          {errors.cuisineType && (
-            <p className="mt-1 text-sm text-red-600">{errors.cuisineType}</p>
-          )}
-        </div>
 
         {/* Image URL */}
         <div>

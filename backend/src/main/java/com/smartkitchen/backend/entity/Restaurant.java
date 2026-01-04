@@ -33,8 +33,6 @@ public class Restaurant {
     private String phone;
     
     @Size(max = 255)
-    @Column(name = "cuisine_type")
-    private String cuisineType;
     
     @Size(max = 255)
     @Column(name = "image_url")
@@ -48,7 +46,7 @@ public class Restaurant {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    private Owner owner;
+    private User owner;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -58,14 +56,6 @@ public class Restaurant {
     public Restaurant() {}
     
     // Constructor with basic fields
-    public Restaurant(String name, String description, String address, String phone, String cuisineType, Owner owner) {
-        this.name = name;
-        this.description = description;
-        this.address = address;
-        this.phone = phone;
-        this.cuisineType = cuisineType;
-        this.owner = owner;
-    }
     
     // Getters and Setters
     public Long getId() {
@@ -108,13 +98,6 @@ public class Restaurant {
         this.phone = phone;
     }
     
-    public String getCuisineType() {
-        return cuisineType;
-    }
-    
-    public void setCuisineType(String cuisineType) {
-        this.cuisineType = cuisineType;
-    }
     
     public String getImageUrl() {
         return imageUrl;
@@ -140,11 +123,11 @@ public class Restaurant {
         this.isOpen = isOpen;
     }
     
-    public Owner getOwner() {
+    public User getOwner() {
         return owner;
     }
     
-    public void setOwner(Owner owner) {
+    public void setOwner(User owner) {
         this.owner = owner;
     }
     

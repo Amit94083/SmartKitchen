@@ -9,11 +9,12 @@
       email: '',
       password: '',
       phone: '',
+      userType: 'CUSTOMER',
     });
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
     
-    const { loginCustomer } = useAuth();
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -31,8 +32,8 @@
       setErrors({});
 
       try {
-        const response = await authService.customerSignup(formData);
-        loginCustomer(response.token, response.customer);
+        const response = await authService.signup(formData);
+        login(response.token, response.user);
         navigate('/home');
       } catch (err) {
         if (err.response?.data && typeof err.response.data === 'object') {

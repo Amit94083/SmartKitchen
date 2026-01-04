@@ -1,9 +1,9 @@
 package com.smartkitchen.backend.controller;
 
 import com.smartkitchen.backend.dto.AuthResponse;
-import com.smartkitchen.backend.dto.LoginRequest;
-import com.smartkitchen.backend.dto.SignupRequest;
-import com.smartkitchen.backend.service.AuthService;
+import com.smartkitchen.backend.dto.UserLoginRequest;
+import com.smartkitchen.backend.dto.UserSignupRequest;
+import com.smartkitchen.backend.service.UserAuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +20,10 @@ import java.util.Map;
 public class AuthController {
     
     @Autowired
-    private AuthService authService;
+    private UserAuthService userAuthService;
     
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest, BindingResult bindingResult) {
+    public ResponseEntity<?> signup(@Valid @RequestBody UserSignupRequest signupRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
@@ -33,7 +33,7 @@ public class AuthController {
         }
         
         try {
-            AuthResponse response = authService.signup(signupRequest);
+            AuthResponse response = userAuthService.signup(signupRequest);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
@@ -41,7 +41,7 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, BindingResult bindingResult) {
+    public ResponseEntity<?> login(@Valid @RequestBody UserLoginRequest loginRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             for (FieldError error : bindingResult.getFieldErrors()) {
@@ -51,7 +51,7 @@ public class AuthController {
         }
         
         try {
-            AuthResponse response = authService.login(loginRequest);
+            AuthResponse response = userAuthService.login(loginRequest);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));

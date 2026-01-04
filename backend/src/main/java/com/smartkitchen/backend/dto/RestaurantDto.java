@@ -10,7 +10,6 @@ public class RestaurantDto {
     private String description;
     private String address;
     private String phone;
-    private String cuisineType;
     private String imageUrl;
     private Double rating;
     private Boolean isOpen;
@@ -25,11 +24,10 @@ public class RestaurantDto {
         this.description = restaurant.getDescription();
         this.address = restaurant.getAddress();
         this.phone = restaurant.getPhone();
-        this.cuisineType = restaurant.getCuisineType();
         this.imageUrl = restaurant.getImageUrl();
         this.rating = restaurant.getRating();
         this.isOpen = restaurant.getIsOpen();
-        this.ownerName = restaurant.getOwner().getOwnerName();
+        this.ownerName = restaurant.getOwner().getName();
         this.createdAt = restaurant.getCreatedAt();
     }
     
@@ -74,13 +72,6 @@ public class RestaurantDto {
         this.phone = phone;
     }
     
-    public String getCuisineType() {
-        return cuisineType;
-    }
-    
-    public void setCuisineType(String cuisineType) {
-        this.cuisineType = cuisineType;
-    }
     
     public String getImageUrl() {
         return imageUrl;

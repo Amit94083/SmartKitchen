@@ -19,32 +19,20 @@ api.interceptors.request.use((config) => {
 });
 
 export const authService = {
-  // Owner authentication
-  ownerLogin: async (data) => {
-    const response = await api.post('/auth/login', data);
+  // Unified user authentication
+  login: async (data) => {
+    const response = await api.post('/user/auth/login', data);
     return response.data;
   },
 
-  ownerSignup: async (data) => {
-    const response = await api.post('/auth/signup', data);
-    return response.data;
-  },
-
-  // Customer authentication
-  customerLogin: async (data) => {
-    const response = await api.post('/customer/auth/login', data);
-    return response.data;
-  },
-
-  customerSignup: async (data) => {
-    const response = await api.post('/customer/auth/signup', data);
+  signup: async (data) => {
+    const response = await api.post('/user/auth/signup', data);
     return response.data;
   },
 
   logout: () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('owner');
-    localStorage.removeItem('customer');
+    localStorage.removeItem('user');
     localStorage.removeItem('userType');
   },
 };
@@ -70,10 +58,10 @@ export const restaurantService = {
     return response.data;
   },
 
-  // Owner restaurant management
+  // Restaurant owner management
   getMyRestaurant: async (ownerEmail) => {
     try {
-      const response = await api.get(`/owner/restaurant?ownerEmail=${encodeURIComponent(ownerEmail)}`);
+      const response = await api.get(`/restaurant-owner/restaurant?ownerEmail=${encodeURIComponent(ownerEmail)}`);
       return response.data;
     } catch (error) {
       if (error.response?.status === 204) {
@@ -84,12 +72,12 @@ export const restaurantService = {
   },
 
   createRestaurant: async (restaurantData, ownerEmail) => {
-    const response = await api.post(`/owner/restaurant?ownerEmail=${encodeURIComponent(ownerEmail)}`, restaurantData);
+    const response = await api.post(`/restaurant-owner/restaurant?ownerEmail=${encodeURIComponent(ownerEmail)}`, restaurantData);
     return response.data;
   },
 
   updateRestaurant: async (restaurantData, ownerEmail) => {
-    const response = await api.put(`/owner/restaurant?ownerEmail=${encodeURIComponent(ownerEmail)}`, restaurantData);
+    const response = await api.put(`/restaurant-owner/restaurant?ownerEmail=${encodeURIComponent(ownerEmail)}`, restaurantData);
     return response.data;
   },
 };
