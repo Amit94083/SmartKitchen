@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+
 import LandingPage from './components/LandingPage';
 import Profile from './components/Profile';
 import Login from './components/Login';
@@ -12,6 +13,7 @@ import Dashboard from './components/Dashboard';
 import Home from './components/Home';
 import ProtectedRoute from './components/ProtectedRoute';
 import Restaurant from './components/Restaurant';
+import Checkout from './components/Checkout';
 
 const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth();
@@ -50,11 +52,21 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/restaurant/:id"
         element={
           <ProtectedRoute requiresCustomer>
             <Restaurant />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute requiresCustomer>
+            <Checkout />
           </ProtectedRoute>
         }
       />

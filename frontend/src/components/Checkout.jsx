@@ -1,0 +1,203 @@
+import React, { useState } from "react";
+import { ShoppingBag, MapPin, Star, CheckCircle, Plus, Clock, CreditCard, Wallet, Wallet2 } from "lucide-react";
+import { useCart } from "../context/CartContext";
+
+const DELIVERY_FEE = 40;
+
+
+export default function Checkout() {
+  const { cart, cartTotal } = useCart();
+  const items = Object.values(cart);
+
+  // Dummy address and payment data for UI
+  const address = { name: "Amit", address: "cfkdk", apt: "nfk", isDefault: true };
+  const [paymentMethod, setPaymentMethod] = useState("card");
+
+  // Address modal state
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [addressLabel, setAddressLabel] = useState("");
+  const [fullAddress, setFullAddress] = useState("");
+  const [apt, setApt] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+
+  const handleSaveAddress = (e) => {
+    e.preventDefault();
+    // Save logic here (e.g., update address state or call API)
+    setShowAddressModal(false);
+    setAddressLabel("");
+    setFullAddress("");
+    setApt("");
+    setDeliveryInstructions("");
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Left: Address, Instructions, Payment */}
+        <div className="md:col-span-2 flex flex-col gap-8">
+          {/* Delivery Address */}
+          <section className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="text-orange-500 w-5 h-5" />
+              <h2 className="font-semibold text-lg">Delivery Address</h2>
+            </div>
+            <div className="border-2 border-orange-400 bg-orange-50 rounded-xl p-4 flex items-center gap-4 mb-4">
+              <div className="bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800 flex items-center gap-1">{address.name} <Star className="w-4 h-4 text-orange-400" /></div>
+                <div className="text-gray-500 text-sm">{address.address}</div>
+                <div className="text-gray-400 text-xs">Apt: {address.apt}</div>
+              </div>
+              <CheckCircle className="text-orange-500 w-6 h-6" />
+            </div>
+            <button
+              className="w-full border-2 border-dashed border-gray-200 rounded-xl py-3 flex items-center justify-center gap-2 text-gray-500 font-medium hover:bg-gray-50 transition"
+              onClick={() => setShowAddressModal(true)}
+            >
+              <Plus className="w-5 h-5" /> Add New Address
+            </button>
+
+            {/* Address Modal */}
+            {showAddressModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+                <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md relative">
+                  <button
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"
+                    onClick={() => setShowAddressModal(false)}
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                  <h2 className="text-2xl font-semibold mb-6">Add Delivery Address</h2>
+                  <form onSubmit={handleSaveAddress} className="space-y-4">
+                    <div>
+                      <label className="block font-medium mb-1">Label (e.g., Home, Work)</label>
+                      <input
+                        type="text"
+                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                        placeholder="Home"
+                        value={addressLabel}
+                        onChange={e => setAddressLabel(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Full Address</label>
+                      <textarea
+                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                        placeholder="123 Main St, City, State ZIP"
+                        value={fullAddress}
+                        onChange={e => setFullAddress(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Apartment/Suite (optional)</label>
+                      <input
+                        type="text"
+                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                        placeholder="Apt 4B"
+                        value={apt}
+                        onChange={e => setApt(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Delivery Instructions (optional)</label>
+                      <textarea
+                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                        placeholder="Ring doorbell twice, leave at door..."
+                        value={deliveryInstructions}
+                        onChange={e => setDeliveryInstructions(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-orange-200 hover:bg-orange-300 text-orange-900 font-semibold py-3 rounded-lg text-lg transition mt-2"
+                    >
+                      Save Address
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Delivery Instructions */}
+          <section className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="text-orange-500 w-5 h-5" />
+              <h2 className="font-semibold text-lg">Delivery Instructions</h2>
+            </div>
+            <textarea className="w-full border border-gray-200 rounded-xl p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-200" placeholder="Any special instructions for delivery..." rows={2} />
+          </section>
+
+          {/* Payment Method */}
+          <section className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard className="text-orange-500 w-5 h-5" />
+              <h2 className="font-semibold text-lg">Payment Method</h2>
+            </div>
+            <div className="flex flex-col gap-4">
+              <label className={`flex items-center gap-3 border-2 rounded-xl p-4 cursor-pointer transition ${paymentMethod === "card" ? "border-orange-400 bg-orange-50" : "border-gray-200"}`}>
+                <input type="radio" name="payment" className="accent-orange-500" checked={paymentMethod === "card"} onChange={() => setPaymentMethod("card")} />
+                <CreditCard className="w-6 h-6 text-indigo-700" />
+                <div>
+                  <div className="font-semibold">Credit/Debit Card</div>
+                  <div className="text-gray-400 text-sm">Pay securely with your card</div>
+                </div>
+              </label>
+              <label className={`flex items-center gap-3 border-2 rounded-xl p-4 cursor-pointer transition ${paymentMethod === "wallet" ? "border-orange-400 bg-orange-50" : "border-gray-200"}`}>
+                <input type="radio" name="payment" className="accent-orange-500" checked={paymentMethod === "wallet"} onChange={() => setPaymentMethod("wallet")} />
+                <Wallet className="w-6 h-6 text-indigo-700" />
+                <div>
+                  <div className="font-semibold">Digital Wallet</div>
+                  <div className="text-gray-400 text-sm">Apple Pay, Google Pay</div>
+                </div>
+              </label>
+              <label className={`flex items-center gap-3 border-2 rounded-xl p-4 cursor-pointer transition ${paymentMethod === "cod" ? "border-orange-400 bg-orange-50" : "border-gray-200"}`}>
+                <input type="radio" name="payment" className="accent-orange-500" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} />
+                <Wallet2 className="w-6 h-6 text-indigo-700" />
+                <div>
+                  <div className="font-semibold">Cash on Delivery</div>
+                  <div className="text-gray-400 text-sm">Pay when you receive</div>
+                </div>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        {/* Right: Order Summary */}
+        <aside className="bg-white rounded-2xl p-6 shadow-sm h-fit">
+          <h2 className="font-semibold text-lg mb-4">Order Summary</h2>
+          {items.length > 0 && (
+            <div className="flex items-center gap-3 mb-4">
+              <img src={items[0].imageUrl || items[0].image} alt={items[0].name} className="w-14 h-14 rounded-lg object-cover" />
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800">{items[0].name}</div>
+                <div className="text-gray-400 text-sm">x{items[0].quantity}</div>
+              </div>
+              <div className="font-bold text-gray-900 text-lg">₹{items[0].price.toFixed(2)}</div>
+            </div>
+          )}
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between text-gray-700">
+              <span>Subtotal</span>
+              <span>₹{cartTotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-700">
+              <span>Delivery Fee</span>
+              <span>₹{DELIVERY_FEE.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-lg mt-2">
+              <span>Total</span>
+              <span className="text-orange-500">₹{(cartTotal + DELIVERY_FEE).toFixed(2)}</span>
+            </div>
+            <button className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl text-lg transition">Place Order</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
