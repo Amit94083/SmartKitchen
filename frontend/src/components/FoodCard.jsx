@@ -23,7 +23,15 @@ export default function FoodCard({ item }) {
           <span className="text-xl font-bold">₹{item.price}</span>
           <button
             className="flex items-center gap-2 bg-orange-500 text-white px-5 py-2 rounded-full font-medium transition-all duration-300 hover:bg-orange-600 hover:shadow-lg"
-            onClick={() => addToCart(item)}
+            onClick={async () => {
+              try {
+                console.log('FoodCard addToCart', item);
+                await addToCart(item, 1);
+              } catch (err) {
+                alert('Failed to add item to cart');
+                console.error('Add to cart error:', err);
+              }
+            }}
           >
             <span className="text-lg">+</span>
             Add

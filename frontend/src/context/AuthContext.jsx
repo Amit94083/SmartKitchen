@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? null : children}
+      {loading ? <div className="text-center py-20">Loading...</div> : children}
     </AuthContext.Provider>
   );
 };

@@ -40,10 +40,28 @@ public class User {
     @Column(name = "user_type", nullable = false)
     private UserType userType;
     
+
     // Additional field for restaurant owners
     @Size(max = 255)
     @Column(name = "restaurant_name")
     private String restaurantName;
+
+    // Address fields for users
+    @Size(max = 100)
+    @Column(name = "address_label")
+    private String addressLabel;
+
+    @Size(max = 500)
+    @Column(name = "address_full")
+    private String addressFull;
+
+    @Size(max = 100)
+    @Column(name = "address_apartment")
+    private String addressApartment;
+
+    @Size(max = 255)
+    @Column(name = "address_instructions")
+    private String addressInstructions;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -81,6 +99,30 @@ public class User {
     }
     
     // Getters and Setters
+    public String getAddressLabel() {
+        return addressLabel;
+    }
+    public void setAddressLabel(String addressLabel) {
+        this.addressLabel = addressLabel;
+    }
+    public String getAddressFull() {
+        return addressFull;
+    }
+    public void setAddressFull(String addressFull) {
+        this.addressFull = addressFull;
+    }
+    public String getAddressApartment() {
+        return addressApartment;
+    }
+    public void setAddressApartment(String addressApartment) {
+        this.addressApartment = addressApartment;
+    }
+    public String getAddressInstructions() {
+        return addressInstructions;
+    }
+    public void setAddressInstructions(String addressInstructions) {
+        this.addressInstructions = addressInstructions;
+    }
     public Long getId() {
         return id;
     }

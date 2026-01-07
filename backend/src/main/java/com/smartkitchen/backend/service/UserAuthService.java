@@ -78,7 +78,11 @@ public class UserAuthService {
             savedUser.getEmail(),
             savedUser.getPhone(),
             savedUser.getUserType().toString(),
-            savedUser.getRestaurantName()
+            savedUser.getRestaurantName(),
+            savedUser.getAddressLabel(),
+            savedUser.getAddressFull(),
+            savedUser.getAddressApartment(),
+            savedUser.getAddressInstructions()
         );
         
         return new AuthResponse(token, userDto, "User registered successfully");
@@ -112,7 +116,11 @@ public class UserAuthService {
             user.getEmail(),
             user.getPhone(),
             user.getUserType().toString(),
-            user.getRestaurantName()
+            user.getRestaurantName(),
+            user.getAddressLabel(),
+            user.getAddressFull(),
+            user.getAddressApartment(),
+            user.getAddressInstructions()
         );
         
         return new AuthResponse(token, userDto, "Login successful");

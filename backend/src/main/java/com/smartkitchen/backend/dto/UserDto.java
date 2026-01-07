@@ -1,24 +1,58 @@
 package com.smartkitchen.backend.dto;
 
 public class UserDto {
-    
     private Long id;
     private String name;
     private String email;
     private String phone;
     private String userType;
     private String restaurantName; // Only for restaurant owners
-    
+
+    // Address fields
+    private String addressLabel;
+    private String addressFull;
+    private String addressApartment;
+    private String addressInstructions;
+
     public UserDto() {}
-    
-    public UserDto(Long id, String name, String email, String phone, String userType, String restaurantName) {
+
+    public UserDto(Long id, String name, String email, String phone, String userType, String restaurantName,
+                   String addressLabel, String addressFull, String addressApartment, String addressInstructions) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.userType = userType;
         this.restaurantName = restaurantName;
+        this.addressLabel = addressLabel;
+        this.addressFull = addressFull;
+        this.addressApartment = addressApartment;
+        this.addressInstructions = addressInstructions;
     }
+        public String getAddressLabel() {
+            return addressLabel;
+        }
+        public void setAddressLabel(String addressLabel) {
+            this.addressLabel = addressLabel;
+        }
+        public String getAddressFull() {
+            return addressFull;
+        }
+        public void setAddressFull(String addressFull) {
+            this.addressFull = addressFull;
+        }
+        public String getAddressApartment() {
+            return addressApartment;
+        }
+        public void setAddressApartment(String addressApartment) {
+            this.addressApartment = addressApartment;
+        }
+        public String getAddressInstructions() {
+            return addressInstructions;
+        }
+        public void setAddressInstructions(String addressInstructions) {
+            this.addressInstructions = addressInstructions;
+        }
     
     // Getters and Setters
     public Long getId() {

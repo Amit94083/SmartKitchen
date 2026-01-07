@@ -1,34 +1,95 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShoppingBag, MapPin, Star, CheckCircle, Plus, Clock, CreditCard, Wallet, Wallet2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { userService } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { imageMap } from "../assets/food";
 
 const DELIVERY_FEE = 40;
 
+// Helper to get image src from imageMap or fallback
+function getCartItemImage(item) {
+  // Try menuItem.imageUrl, menuItem.image, then fallback to imageMap
+  const imageKey = item.menuItem?.imageUrl || item.menuItem?.image || item.imageUrl || item.image;
+  // If imageKey is a filename, use imageMap; if it's a URL, use directly
+  if (!imageKey) return "";
+  // If imageKey looks like a URL (starts with http), use directly
+  if (typeof imageKey === "string" && imageKey.startsWith("http")) return imageKey;
+  // If imageKey is a filename, use imageMap
+  return imageMap[imageKey] || imageKey;
+}
 
 export default function Checkout() {
   const { cart, cartTotal } = useCart();
-  const items = Object.values(cart);
-
-  // Dummy address and payment data for UI
-  const address = { name: "Amit", address: "cfkdk", apt: "nfk", isDefault: true };
-  const [paymentMethod, setPaymentMethod] = useState("card");
-
-  // Address modal state
+  const { user } = useAuth();
+  const [addresses, setAddresses] = useState([]); // Multiple addresses
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressLabel, setAddressLabel] = useState("");
   const [fullAddress, setFullAddress] = useState("");
   const [apt, setApt] = useState("");
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
 
-  const handleSaveAddress = (e) => {
+  useEffect(() => {
+    async function fetchAddresses() {
+      if (user && user.id) {
+        try {
+          const response = await userService.getProfile(user.id); // Fetch user profile
+          console.log('User profile response:', response);
+          console.log('Auth user:', user);
+          // Construct address object from profile fields
+          const addressObj = {
+            label: response.addressLabel,
+            full: response.addressFull,
+            apartment: response.addressApartment,
+            instructions: response.addressInstructions,
+            name: response.name || user.name,
+          };
+          setAddresses([addressObj]);
+          setSelectedAddress(addressObj);
+        } catch (err) {
+          setAddresses([]);
+          setSelectedAddress(null);
+        }
+      }
+    }
+    fetchAddresses();
+  }, [user]);
+
+  const handleSaveAddress = async (e) => {
     e.preventDefault();
-    // Save logic here (e.g., update address state or call API)
-    setShowAddressModal(false);
-    setAddressLabel("");
-    setFullAddress("");
-    setApt("");
-    setDeliveryInstructions("");
+    if (!user || !fullAddress) return;
+    const newAddress = {
+      label: addressLabel,
+      address: fullAddress,
+      apt,
+      deliveryInstructions,
+      isDefault: false,
+    };
+    try {
+      const response = await userService.addAddress(user.id, newAddress); // You need to implement addAddress in userService
+      setAddresses(response.addresses || []);
+      setSelectedAddress(response.addresses?.[response.addresses.length - 1] || null);
+      setShowAddressModal(false);
+      setAddressLabel("");
+      setFullAddress("");
+      setApt("");
+      setDeliveryInstructions("");
+    } catch (err) {
+      // handle error
+    }
   };
+
+  // Handle empty or not loaded cart
+  if (!cart || !cart.items || cart.items.length === 0) {
+    return <div className="text-center text-gray-500 py-20">Your cart is empty.</div>;
+  }
+  const items = cart.items;
+  // Defensive fallback for cartTotal
+  const safeCartTotal = typeof cartTotal === 'number' && !isNaN(cartTotal) ? cartTotal : 0;
+
+  // Dummy address and payment data for UI
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
@@ -46,9 +107,9 @@ export default function Checkout() {
                 <MapPin className="w-5 h-5" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-gray-800 flex items-center gap-1">{address.name} <Star className="w-4 h-4 text-orange-400" /></div>
-                <div className="text-gray-500 text-sm">{address.address}</div>
-                <div className="text-gray-400 text-xs">Apt: {address.apt}</div>
+                <div className="font-semibold text-gray-800 flex items-center gap-1">{selectedAddress?.label || selectedAddress?.name || "No Name"} <Star className="w-4 h-4 text-orange-400" /></div>
+                <div className="text-gray-500 text-sm">{selectedAddress?.full || "No Address"}</div>
+                <div className="text-gray-400 text-xs">Apt: {selectedAddress?.apartment || "N/A"}</div>
               </div>
               <CheckCircle className="text-orange-500 w-6 h-6" />
             </div>
@@ -165,26 +226,38 @@ export default function Checkout() {
                 </div>
               </label>
             </div>
-          </section>
+          </section>yes 
         </div>
 
         {/* Right: Order Summary */}
         <aside className="bg-white rounded-2xl p-6 shadow-sm h-fit">
           <h2 className="font-semibold text-lg mb-4">Order Summary</h2>
           {items.length > 0 && (
-            <div className="flex items-center gap-3 mb-4">
-              <img src={items[0].imageUrl || items[0].image} alt={items[0].name} className="w-14 h-14 rounded-lg object-cover" />
-              <div className="flex-1">
-                <div className="font-semibold text-gray-800">{items[0].name}</div>
-                <div className="text-gray-400 text-sm">x{items[0].quantity}</div>
-              </div>
-              <div className="font-bold text-gray-900 text-lg">₹{items[0].price.toFixed(2)}</div>
+            <div className="space-y-4 mb-4">
+              {items.map((item, idx) => (
+                <div key={item.id || idx} className="flex items-center gap-3">
+                  <img src={getCartItemImage(item)} alt={item.name || item.menuItem?.name} className="w-14 h-14 rounded-lg object-cover" />
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800">{item.name || item.menuItem?.name}</div>
+                    <div className="text-gray-400 text-sm">x{item.quantity}</div>
+                  </div>
+                  <div className="font-bold text-gray-900 text-lg">
+                    ₹{
+                      typeof item.price === 'number' && item.price > 0
+                        ? item.price.toFixed(2)
+                        : typeof item.menuItem?.price === 'number'
+                          ? item.menuItem.price.toFixed(2)
+                          : '0.00'
+                    }
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between text-gray-700">
               <span>Subtotal</span>
-              <span>₹{cartTotal.toFixed(2)}</span>
+              <span>₹{safeCartTotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-gray-700">
               <span>Delivery Fee</span>
@@ -192,7 +265,7 @@ export default function Checkout() {
             </div>
             <div className="flex justify-between font-bold text-lg mt-2">
               <span>Total</span>
-              <span className="text-orange-500">₹{(cartTotal + DELIVERY_FEE).toFixed(2)}</span>
+              <span className="text-orange-500">₹{(safeCartTotal + DELIVERY_FEE).toFixed(2)}</span>
             </div>
             <button className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl text-lg transition">Place Order</button>
           </div>

@@ -1,5 +1,6 @@
 
 import React from "react";
+import { imageMap } from "../assets/food";
 import { X, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
@@ -7,8 +8,8 @@ import { useNavigate } from "react-router-dom";
 const DELIVERY_FEE = 40;
 
 export default function CartDrawer({ open, onClose }) {
-  const { cart, cartCount, cartTotal, addToCart, removeFromCart } = useCart();
-  const items = Object.values(cart);
+  const { cart, cartCount, cartTotal, addToCart, removeFromCart, updateCartItem } = useCart();
+  const items = cart?.items || [];
   const navigate = useNavigate();
 
   if (!open) return null;
@@ -38,20 +39,31 @@ export default function CartDrawer({ open, onClose }) {
         ) : (
           <>
             <div className="flex-1 space-y-4 mb-6">
-              {items.map((item) => (
-                <div key={item.itemId} className="flex items-center bg-gray-50 rounded-2xl p-4 gap-4 relative">
-                  <img src={item.imageUrl || item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
+              {[...items]
+                .sort((a, b) => (a.menuItem?.name || '').localeCompare(b.menuItem?.name || ''))
+                .map((item) => (
+                <div key={item.id} className="flex items-center bg-gray-50 rounded-2xl p-4 gap-4 relative">
+                  <img src={imageMap[item.menuItem?.imageUrl] || item.menuItem?.imageUrl || item.menuItem?.image} alt={item.menuItem?.name} className="w-16 h-16 rounded-lg object-cover" />
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-900">{item.name}</div>
-                    <div className="text-orange-600 font-bold text-base">₹{item.price.toFixed(2)}</div>
+                    <div className="font-semibold text-gray-900">{item.menuItem?.name}</div>
+                    <div className="text-orange-600 font-bold text-base">₹{item.menuItem?.price?.toFixed(2)}</div>
                   </div>
-                  <button className="text-gray-300 hover:text-red-500 absolute top-3 right-3" onClick={() => removeFromCart(item.itemId)}>
+                  <button className="text-gray-300 hover:text-red-500 absolute top-3 right-3" onClick={() => removeFromCart(item)}>
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <div className="flex items-center gap-2 ml-2">
-                    <button className="w-8 h-8 rounded-full bg-gray-100 text-xl text-gray-500 flex items-center justify-center" onClick={() => removeFromCart(item.itemId)}>-</button>
+                    <button
+                      className="w-8 h-8 rounded-full bg-gray-100 text-xl text-gray-500 flex items-center justify-center"
+                      onClick={() => {
+                        if (item.quantity === 1) {
+                          removeFromCart(item);
+                        } else {
+                          updateCartItem(item, item.quantity - 1);
+                        }
+                      }}
+                    >-</button>
                     <span className="font-medium text-lg">{item.quantity}</span>
-                    <button className="w-8 h-8 rounded-full bg-orange-500 text-white text-xl flex items-center justify-center" onClick={() => addToCart(item)}>+</button>
+                    <button className="w-8 h-8 rounded-full bg-orange-500 text-white text-xl flex items-center justify-center" onClick={() => updateCartItem(item, item.quantity + 1)}>+</button>
                   </div>
                 </div>
               ))}

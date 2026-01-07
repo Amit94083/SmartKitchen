@@ -1,3 +1,5 @@
+import Orders from './components/Orders';
+import Cart from './components/Cart';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -54,6 +56,40 @@ const AppRoutes = () => {
       />
 
       <Route
+        path="/orders"
+        element={
+          <ProtectedRoute requiresCustomer>
+            <Orders />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/cart"
+        element={
+          <ProtectedRoute requiresCustomer>
+            <Cart />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute requiresCustomer>
+            <Orders />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/cart"
+        element={
+          <ProtectedRoute requiresCustomer>
+            <Cart />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/restaurant/:id"
         element={
           <ProtectedRoute requiresCustomer>
@@ -88,10 +124,8 @@ const AppRoutes = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <Router>
+      <AppRoutes />
+    </Router>
   );
 }

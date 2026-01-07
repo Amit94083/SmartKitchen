@@ -1,10 +1,17 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Box, User, MapPin, Star, Plus, CreditCard, Headset, LogOut } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { userService } from "../services/api";
+import { useLocation } from "react-router-dom";
+import { MapPin, Star, Plus, CreditCard, Headset, LogOut } from "lucide-react";
+import AppHeader from "./AppHeader";
 
 export default function Profile() {
-  const navigate = useNavigate();
+  const { user, login, logout } = useAuth();
   const location = useLocation();
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  };
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressForm, setAddressForm] = useState({
     label: "",
@@ -13,64 +20,57 @@ export default function Profile() {
     instructions: ""
   });
 
+  // Open modal and pre-fill form if updating
+  const handleOpenAddressModal = () => {
+    if (user?.addressLabel) {
+      setAddressForm({
+        label: user.addressLabel || "",
+        fullAddress: user.addressFull || "",
+        apartment: user.addressApartment || "",
+        instructions: user.addressInstructions || ""
+      });
+    } else {
+      setAddressForm({ label: "", fullAddress: "", apartment: "", instructions: "" });
+    }
+    setShowAddressModal(true);
+  };
+
   const handleInputChange = (e) => {
     setAddressForm({ ...addressForm, [e.target.name]: e.target.value });
   };
 
-  const handleSaveAddress = (e) => {
+  const handleSaveAddress = async (e) => {
     e.preventDefault();
-    // Save logic here
+    try {
+      const profileData = {
+        addressLabel: addressForm.label,
+        addressFull: addressForm.fullAddress,
+        addressApartment: addressForm.apartment,
+        addressInstructions: addressForm.instructions,
+      };
+      const updatedUser = await userService.updateProfile(profileData);
+      // Update user context (login expects token and user)
+      login(localStorage.getItem('token'), updatedUser);
+    } catch (err) {
+      alert('Failed to save address');
+    }
     setShowAddressModal(false);
   };
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      {/* Header Bar (reuse if you have a layout/header component) */}
-      <div className="w-full flex items-center justify-between px-10 py-3 bg-gradient-to-b from-orange-100 to-white shadow-md h-[80px]">
-        <div className="flex items-center gap-3">
-          <div className="bg-orange-400 text-white font-bold rounded-full w-11 h-11 flex items-center justify-center text-lg">CK</div>
-          <span className="text-xl font-bold text-gray-800 ml-2">CloudKitchen</span>
-        </div>
-        <nav className="flex items-center gap-7">
-          <button
-            className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition-colors duration-150
-              ${location.pathname.startsWith('/restaurant')
-                ? 'bg-[#ff9800] text-white'
-                : 'bg-orange-100 text-orange-600'}
-            `}
-            onClick={() => navigate('/restaurant/1')}
-            style={location.pathname === '/profile' ? { background: '#fff', color: '#f57c00' } : {}}
-          >
-            <Home className="w-5 h-5" /> Menu
-          </button>
-          <button className="flex items-center gap-2 text-gray-700 font-semibold text-base hover:bg-gray-100 rounded-xl px-4 py-1.5">
-            <Box className="w-5 h-5" /> Orders
-          </button>
-          <button
-            className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition-colors duration-150
-              ${location.pathname === '/profile'
-                ? 'bg-[#ff9800] text-white'
-                : 'bg-orange-100 text-orange-600'}
-            `}
-            onClick={() => navigate('/profile')}
-          >
-            <User className="w-5 h-5" /> Profile
-          </button>
-        </nav>
-      </div>
-
-      {/* Orange Bar */}
-      <div className="w-full h-20 bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500" />
-
+      <AppHeader />
+      {/* Orange Gradient Background (match restaurant/hero style) */}
+      <div className="w-full h-20 bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 mt-[80px]" />
       {/* Profile Card */}
       <div className="flex flex-col items-center mt-[-40px]">
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl flex items-center gap-6">
           <div className="bg-orange-100 text-orange-500 font-bold rounded-full w-20 h-20 flex items-center justify-center text-4xl">
-            I
+            {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
           </div>
           <div>
-            <div className="text-2xl font-semibold text-gray-800 mb-1">IT015_Amit_Chaudhary</div>
-            <div className="text-gray-500 text-lg">23ituoz016@ddu.ac.in</div>
+            <div className="text-2xl font-semibold text-gray-800 mb-1">{user?.name || "Unknown User"}</div>
+            <div className="text-gray-500 text-lg">{user?.email || "No email"}</div>
           </div>
         </div>
 
@@ -82,9 +82,9 @@ export default function Profile() {
             </div>
             <button
               className="flex items-center gap-1 bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-orange-600"
-              onClick={() => setShowAddressModal(true)}
+              onClick={handleOpenAddressModal}
             >
-              <Plus className="w-4 h-4" /> Add
+              <Plus className="w-4 h-4" /> {user?.addressLabel ? 'Update' : 'Add'}
             </button>
                 {/* Add Address Modal */}
                 {showAddressModal && (
@@ -147,21 +147,24 @@ export default function Profile() {
                           style={{ background: addressForm.label && addressForm.fullAddress ? '#ffa726' : '#ffe0b2' }}
                           disabled={!addressForm.label || !addressForm.fullAddress}
                         >
-                          Save Address
+                          {user?.addressLabel ? 'Update Address' : 'Save Address'}
                         </button>
                       </form>
                     </div>
                   </div>
                 )}
           </div>
-          <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg mb-2">
-            <MapPin className="w-5 h-5 text-orange-400" />
-            <div>
-              <div className="font-semibold text-gray-800 flex items-center gap-1">Amit <Star className="w-4 h-4 text-orange-500 inline" fill="#f59e42" /></div>
-              <div className="text-gray-500 text-sm">cfkdk</div>
-              <div className="text-gray-400 text-xs">Apt: nfk</div>
+          {/* Render user's address if available */}
+          {user?.addressLabel && (
+            <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg mb-2">
+              <MapPin className="w-5 h-5 text-orange-400" />
+              <div>
+                <div className="font-semibold text-gray-800 flex items-center gap-1">{user.addressLabel} <Star className="w-4 h-4 text-orange-500 inline" fill="#f59e42" /></div>
+                <div className="text-gray-500 text-sm">{user.addressFull}</div>
+                {user.addressApartment && <div className="text-gray-400 text-xs">Apt: {user.addressApartment}</div>}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Payment Methods & Support */}
@@ -177,7 +180,10 @@ export default function Profile() {
         </div>
 
         {/* Sign Out */}
-        <button className="flex items-center gap-2 border border-orange-300 text-orange-500 font-semibold rounded-xl px-8 py-3 mt-8 hover:bg-orange-50">
+        <button
+          className="flex items-center gap-2 border border-orange-300 text-orange-500 font-semibold rounded-xl px-8 py-3 mt-8 hover:bg-orange-50"
+          onClick={handleLogout}
+        >
           <LogOut className="w-5 h-5" /> Sign Out
         </button>
       </div>

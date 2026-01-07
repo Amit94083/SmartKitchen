@@ -1,3 +1,45 @@
+export const cartService = {
+  addToCart: async (userId, menuItemId, quantity = 1) => {
+    const response = await api.post('/cart/add', {}, {
+      params: { userId, menuItemId, quantity }
+    });
+    return response.data;
+  },
+  getCart: async (userId) => {
+    const response = await api.get(`/cart/user/${userId}`);
+    return response.data;
+  },
+  updateCartItem: async (userId, menuItemId, quantity) => {
+    const response = await api.put('/cart/update', {}, {
+      params: { userId, menuItemId, quantity }
+    });
+    return response.data;
+  },
+  removeFromCart: async (userId, menuItemId) => {
+    const response = await api.delete('/cart/remove', {
+      params: { userId, menuItemId }
+    });
+    return response.data;
+  },
+};
+export const userService = {
+  updateProfile: async (profileData) => {
+    const response = await api.put('/user/profile', profileData);
+    return response.data;
+  },
+  getProfile: async (userId) => {
+    const response = await api.get(`/user/profile/${userId}`);
+    return response.data;
+  },
+  getAddresses: async (userId) => {
+    const response = await api.get(`/user/${userId}/addresses`);
+    return response.data;
+  },
+  addAddress: async (userId, addressData) => {
+    const response = await api.post(`/user/${userId}/addresses`, addressData);
+    return response.data;
+  },
+};
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';

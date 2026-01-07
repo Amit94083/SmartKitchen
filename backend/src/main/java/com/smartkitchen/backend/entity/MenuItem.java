@@ -1,11 +1,18 @@
 package com.smartkitchen.backend.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+    // If you have a list of CartItems in MenuItem, add this:
+    // @OneToMany(mappedBy = "menuItem")
+    // @JsonBackReference
+    // private List<CartItem> cartItems;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "menu_items")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class MenuItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

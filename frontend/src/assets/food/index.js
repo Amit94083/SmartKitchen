@@ -14,10 +14,10 @@ import FrenchFries from "./fries/FrenchFries.jpeg";
 import PeriPeriFries from "./fries/PeriPeriFries.jpeg";
 import PizzaFries from "./fries/PizzaFries.jpeg";
 
-import CheeseCornGarlicBread from "./GarlicBread/CheeseCornGarlicBread.png";
-import CheeseJalapenoGarlicBread from "./GarlicBread/CheeseJalapenoGarlicBread.jpeg";
-import CheesePaneerGarlicBread from "./GarlicBread/CheesePaneerGarlicBread.png";
-import SupremeGarlicBread from "./GarlicBread/SupremeGarlicBread.png";
+import CheeseCornGarlicBread from "./GarlicBread/CheeseCornGarlicBread.jpg";
+import CheeseJalapenoGarlicBread from "./GarlicBread/CheeseJalapenoGarlicBread.jpg";
+import CheesePaneerGarlicBread from "./GarlicBread/CheesePaneerGarlicBread.jpg";
+import SupremeGarlicBread from "./GarlicBread/SupremeGarlicBread.jpg";
 
 import CheezeMaggi from "./maggie/ChezzeMaggi.png";
 import MasalaMaggi from "./maggie/MasalaMaggi.png";
