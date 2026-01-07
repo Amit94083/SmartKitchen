@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 @RestController
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -24,6 +27,88 @@ public class OrderController {
     private OrderRepository orderRepository;
     @Autowired
     private UserRepository userRepository;
+
+    @PostMapping("")
+    public ResponseEntity<OrderDto> createOrder(@AuthenticationPrincipal UserDetails userDetails, @RequestBody OrderDto orderDto) {
+        String email = null;
+        if (userDetails != null) {
+            email = userDetails.getUsername();
+        } else {
+            Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            } else if (principal instanceof String) {
+                email = (String) principal;
+            }
+        }
+        if (email == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+        User user = userRepository.findByEmail(email).orElseThrow();
+
+
+        // Create new Order and set fields
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderTime(java.time.LocalDateTime.now());
+        order.setStatus("Order Placed");
+        order.setTotalAmount(orderDto.getTotalAmount());
+
+        // Use address from request if provided, else fallback to user entity
+        order.setAddressLabel(
+            (orderDto.getAddressLabel() != null && !orderDto.getAddressLabel().isEmpty()) ?
+                orderDto.getAddressLabel() : user.getAddressLabel()
+        );
+        order.setAddressFull(
+            (orderDto.getAddressFull() != null && !orderDto.getAddressFull().isEmpty()) ?
+                orderDto.getAddressFull() : user.getAddressFull()
+        );
+        order.setAddressApartment(
+            (orderDto.getAddressApartment() != null && !orderDto.getAddressApartment().isEmpty()) ?
+                orderDto.getAddressApartment() : user.getAddressApartment()
+        );
+        order.setAddressInstructions(
+            (orderDto.getAddressInstructions() != null && !orderDto.getAddressInstructions().isEmpty()) ?
+                orderDto.getAddressInstructions() : user.getAddressInstructions()
+        );
+
+        // Set order items if provided (expand as needed)
+        if (orderDto.getOrderItems() != null) {
+            java.util.List<OrderItem> items = orderDto.getOrderItems().stream().map(dto -> {
+                OrderItem item = new OrderItem();
+                item.setProductName(dto.getProductName());
+                item.setQuantity(dto.getQuantity());
+                item.setPrice(dto.getPrice());
+                item.setOrder(order);
+                return item;
+            }).collect(java.util.stream.Collectors.toList());
+            order.setOrderItems(items);
+        }
+
+        Order saved = orderRepository.save(order);
+
+        // Build response DTO
+        java.util.List<OrderItemDto> itemDtos = saved.getOrderItems().stream().map(item ->
+            new OrderItemDto(
+                item.getId(),
+                item.getProductName(),
+                item.getQuantity(),
+                item.getPrice()
+            )
+        ).collect(java.util.stream.Collectors.toList());
+        OrderDto responseDto = new OrderDto(
+            saved.getId(),
+            saved.getOrderTime(),
+            saved.getStatus(),
+            saved.getTotalAmount(),
+            itemDtos,
+            saved.getAddressLabel(),
+            saved.getAddressFull(),
+            saved.getAddressApartment(),
+            saved.getAddressInstructions()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+    }
 
     // No need for OrderItemRepository, use order.getOrderItems()
 
@@ -46,7 +131,6 @@ public class OrderController {
         User user = userRepository.findByEmail(email).orElseThrow();
         List<Order> orders = orderRepository.findByUser(user);
         List<OrderDto> dtos = orders.stream().map(o -> {
-            // Map OrderItems to OrderItemDto
             java.util.List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item ->
                 new OrderItemDto(
                     item.getId(),
@@ -60,7 +144,11 @@ public class OrderController {
                 o.getOrderTime(),
                 o.getStatus(),
                 o.getTotalAmount(),
-                itemDtos
+                itemDtos,
+                o.getAddressLabel(),
+                o.getAddressFull(),
+                o.getAddressApartment(),
+                o.getAddressInstructions()
             );
         }).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);

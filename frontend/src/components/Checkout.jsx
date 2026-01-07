@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ShoppingBag, MapPin, Star, CheckCircle, Plus, Clock, CreditCard, Wallet, Wallet2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { userService } from "../services/api";
@@ -80,6 +81,20 @@ export default function Checkout() {
     }
   };
 
+
+  // Dummy address and payment data for UI
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const navigate = useNavigate();
+
+  // Handler for placing order
+  const handlePlaceOrder = async () => {
+    // TODO: Replace with actual order placement API call
+    // Simulate order placement and get orderId
+    const mockOrderId = Math.random().toString(36).substring(2, 10); // Replace with real orderId from backend
+    // After successful order placement, redirect to order status page
+    navigate(`/order/${mockOrderId}`);
+  };
+
   // Handle empty or not loaded cart
   if (!cart || !cart.items || cart.items.length === 0) {
     return <div className="text-center text-gray-500 py-20">Your cart is empty.</div>;
@@ -87,9 +102,6 @@ export default function Checkout() {
   const items = cart.items;
   // Defensive fallback for cartTotal
   const safeCartTotal = typeof cartTotal === 'number' && !isNaN(cartTotal) ? cartTotal : 0;
-
-  // Dummy address and payment data for UI
-  const [paymentMethod, setPaymentMethod] = useState("card");
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
@@ -226,7 +238,7 @@ export default function Checkout() {
                 </div>
               </label>
             </div>
-          </section>yes 
+          </section>
         </div>
 
         {/* Right: Order Summary */}
@@ -267,7 +279,12 @@ export default function Checkout() {
               <span>Total</span>
               <span className="text-orange-500">₹{(safeCartTotal + DELIVERY_FEE).toFixed(2)}</span>
             </div>
-            <button className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl text-lg transition">Place Order</button>
+            <button
+              className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl text-lg transition"
+              onClick={handlePlaceOrder}
+            >
+              Place Order
+            </button>
           </div>
         </aside>
       </div>

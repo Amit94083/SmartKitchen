@@ -16,6 +16,7 @@ import Home from './components/Home';
 import ProtectedRoute from './components/ProtectedRoute';
 import Restaurant from './components/Restaurant';
 import Checkout from './components/Checkout';
+import OrderStatus from './components/OrderStatus';
 
 const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth();
@@ -98,11 +99,21 @@ const AppRoutes = () => {
         }
       />
 
+
       <Route
         path="/checkout"
         element={
           <ProtectedRoute requiresCustomer>
             <Checkout />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/order/:orderId"
+        element={
+          <ProtectedRoute requiresCustomer>
+            <OrderStatus />
           </ProtectedRoute>
         }
       />

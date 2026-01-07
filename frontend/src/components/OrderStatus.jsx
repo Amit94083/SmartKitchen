@@ -1,0 +1,128 @@
+
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Clock, MapPin, DollarSign } from "lucide-react";
+
+const ORDER_STEPS = [
+  { label: "Order Placed", key: "placed", icon: <Clock className="w-6 h-6" /> },
+  { label: "Confirmed", key: "confirmed", icon: <span className="w-6 h-6 flex items-center justify-center">✔️</span> },
+  { label: "Preparing", key: "preparing", icon: <span className="w-6 h-6 flex items-center justify-center">🥣</span> },
+  { label: "Ready", key: "ready", icon: <span className="w-6 h-6 flex items-center justify-center">📦</span> },
+  { label: "On the Way", key: "on_the_way", icon: <span className="w-6 h-6 flex items-center justify-center">🚴‍♂️</span> },
+  { label: "Delivered", key: "delivered", icon: <span className="w-6 h-6 flex items-center justify-center">🏠</span> },
+];
+
+export default function OrderStatus() {
+  const { orderId } = useParams();
+  const navigate = useNavigate();
+  const [order, setOrder] = useState(null);
+
+  useEffect(() => {
+    // TODO: Replace with your actual API call
+    setOrder({
+      id: orderId,
+      status: "placed", // or "confirmed", etc.
+      createdAt: new Date().toISOString(),
+      estimatedDelivery: "6:26 PM",
+      address: {
+        line1: "cfkdk, nfk",
+        note: "nr",
+      },
+      items: [
+        {
+          name: "Mediterranean Mezze Platter",
+          qty: 1,
+          price: 349,
+          image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=80&q=80"
+        }
+      ],
+      subtotal: 349,
+      deliveryFee: 40,
+      total: 389,
+    });
+  }, [orderId]);
+
+  if (!order) return <div>Loading...</div>;
+
+  const currentStep = ORDER_STEPS.findIndex(s => s.key === order.status);
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-2">
+          <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&#8592;</button>
+          <div>
+            <div className="font-semibold text-lg">Order #{order.id}</div>
+            <div className="text-gray-400 text-sm">{new Date(order.createdAt).toLocaleString()}</div>
+          </div>
+          <span className="ml-auto bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold capitalize">pending</span>
+        </div>
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow p-6 mt-4">
+          <h2 className="text-2xl font-bold text-center mb-1">Order in Progress</h2>
+          <p className="text-center text-gray-500 mb-6">Your order has been received and is being processed.</p>
+          {/* Progress Tracker */}
+          <div className="flex items-center justify-between mb-8">
+            {ORDER_STEPS.map((step, idx) => (
+              <div key={step.key} className="flex-1 flex flex-col items-center relative">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 border-2 ${idx === currentStep ? 'border-orange-500 bg-orange-100' : 'border-gray-200 bg-gray-50'}`}>
+                  {idx === currentStep ? <Clock className="w-6 h-6 text-orange-500" /> : step.icon}
+                </div>
+                <div className={`text-xs ${idx === currentStep ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>{step.label}</div>
+                {idx < ORDER_STEPS.length - 1 && (
+                  <div className="absolute top-5 right-0 w-full h-0.5 bg-gray-200 z-0" style={{ left: '50%', right: '-50%' }}></div>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* Estimated Delivery */}
+          <div className="bg-orange-50 rounded-xl p-4 flex items-center gap-3 mb-8">
+            <Clock className="text-orange-500 w-5 h-5" />
+            <div>
+              <div className="text-xs text-gray-500">Estimated Delivery</div>
+              <div className="font-bold text-lg text-orange-600">{order.estimatedDelivery}</div>
+            </div>
+          </div>
+          {/* Delivery Address */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-4">
+            <div className="font-semibold mb-1 flex items-center gap-2">
+              <MapPin className="text-gray-400 w-5 h-5" /> Delivery Address
+            </div>
+            <div>{order.address.line1}</div>
+            <div className="text-xs text-gray-400 italic mt-1">Note: {order.address.note}</div>
+          </div>
+          {/* Order Items & Summary */}
+          <div className="bg-gray-50 rounded-xl p-4 mt-4">
+            <div className="font-semibold mb-3 flex items-center gap-2 text-base">
+              <DollarSign className="w-5 h-5 text-gray-500" /> Order Items
+            </div>
+            {order.items.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3 mb-3">
+                <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800">{item.name}</div>
+                  <div className="text-xs text-gray-500">Qty: {item.qty}</div>
+                </div>
+                <div className="font-semibold text-gray-800">₹{item.price.toFixed(2)}</div>
+              </div>
+            ))}
+            <hr className="my-3" />
+            <div className="flex justify-between text-gray-700 mb-1">
+              <span>Subtotal</span>
+              <span>₹{order.subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-700 mb-1">
+              <span>Delivery Fee</span>
+              <span>₹{order.deliveryFee}</span>
+            </div>
+            <div className="flex justify-between font-bold text-lg mt-2">
+              <span>Total</span>
+              <span className="text-orange-500">₹{order.total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

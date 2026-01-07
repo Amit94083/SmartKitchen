@@ -41,16 +41,7 @@ export default function AppHeader() {
         >
           <Box className="w-5 h-5" /> Orders
         </button>
-        <button
-          className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition ${isActive('/cart') ? 'bg-orange-100 text-orange-600' : 'text-gray-700 hover:bg-gray-100'}`}
-          onClick={() => navigate('/cart')}
-        >
-          <ShoppingCart className="w-5 h-5" />
-          Cart
-          {cartCount > 0 && (
-            <span className="ml-1 bg-orange-500 text-white rounded-full px-2 py-0.5 text-xs font-bold">{cartCount}</span>
-          )}
-        </button>
+
         <button
           className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition ${isActive('/profile') ? 'bg-orange-100 text-orange-600' : 'text-gray-700 hover:bg-gray-100'}`}
           onClick={() => navigate('/profile')}
