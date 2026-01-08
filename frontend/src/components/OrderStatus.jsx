@@ -34,6 +34,14 @@ export default function OrderStatus() {
 
   const currentStep = ORDER_STEPS.findIndex(s => s.key === order.status);
 
+  // Calculate subtotal from order items
+  const subtotal = order.orderItems
+    ? order.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    : 0;
+  // Use deliveryFee if present, else fallback to 40
+  const deliveryFee = order.deliveryFee !== undefined && order.deliveryFee !== null ? order.deliveryFee : 40;
+  const total = subtotal + deliveryFee;
+
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
@@ -104,15 +112,15 @@ export default function OrderStatus() {
             <hr className="my-3" />
             <div className="flex justify-between text-gray-700 mb-1">
               <span>Subtotal</span>
-              <span>₹{order.totalAmount ? order.totalAmount.toFixed(2) : 0}</span>
+              <span>₹{subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-gray-700 mb-1">
               <span>Delivery Fee</span>
-              <span>₹{order.deliveryFee !== undefined && order.deliveryFee !== null ? order.deliveryFee : 0}</span>
+              <span>₹{deliveryFee}</span>
             </div>
             <div className="flex justify-between font-bold text-lg mt-2">
               <span>Total</span>
-              <span className="text-orange-500">₹{order.totalAmount ? order.totalAmount.toFixed(2) : 0}</span>
+              <span className="text-orange-500">₹{total.toFixed(2)}</span>
             </div>
           </div>
         </div>
