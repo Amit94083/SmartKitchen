@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, MapPin, Star, CheckCircle, Plus, Clock, CreditCard, Wallet, Wallet2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
-import { userService } from "../services/api";
+import { userService, orderService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { imageMap } from "../assets/food";
 
@@ -60,24 +60,32 @@ export default function Checkout() {
   const handleSaveAddress = async (e) => {
     e.preventDefault();
     if (!user || !fullAddress) return;
-    const newAddress = {
-      label: addressLabel,
-      address: fullAddress,
-      apt,
-      deliveryInstructions,
-      isDefault: false,
+    const profileData = {
+      addressLabel: addressLabel,
+      addressFull: fullAddress,
+      addressApartment: apt,
+      addressInstructions: deliveryInstructions,
     };
     try {
-      const response = await userService.addAddress(user.id, newAddress); // You need to implement addAddress in userService
-      setAddresses(response.addresses || []);
-      setSelectedAddress(response.addresses?.[response.addresses.length - 1] || null);
+      const updatedUser = await userService.updateProfile(profileData);
+      // Update local address state from updatedUser
+      const addressObj = {
+        label: updatedUser.addressLabel,
+        full: updatedUser.addressFull,
+        apartment: updatedUser.addressApartment,
+        instructions: updatedUser.addressInstructions,
+        name: updatedUser.name || user.name,
+      };
+      setAddresses([addressObj]);
+      setSelectedAddress(addressObj);
       setShowAddressModal(false);
       setAddressLabel("");
       setFullAddress("");
       setApt("");
       setDeliveryInstructions("");
     } catch (err) {
-      // handle error
+      // handle error, e.g. show alert
+      alert('Failed to save address');
     }
   };
 
@@ -88,11 +96,29 @@ export default function Checkout() {
 
   // Handler for placing order
   const handlePlaceOrder = async () => {
-    // TODO: Replace with actual order placement API call
-    // Simulate order placement and get orderId
-    const mockOrderId = Math.random().toString(36).substring(2, 10); // Replace with real orderId from backend
-    // After successful order placement, redirect to order status page
-    navigate(`/order/${mockOrderId}`);
+    if (!user || !selectedAddress || !cart || !cart.items || cart.items.length === 0) {
+      alert('Missing user, address, or cart data.');
+      return;
+    }
+    const orderData = {
+      totalAmount: cartTotal,
+      addressLabel: selectedAddress.label || selectedAddress.name,
+      addressFull: selectedAddress.full,
+      addressApartment: selectedAddress.apartment,
+      addressInstructions: selectedAddress.instructions,
+      orderItems: cart.items.map(item => ({
+        productName: item.menuItem?.name || item.name,
+        quantity: item.quantity,
+        price: item.menuItem?.price || item.price,
+      })),
+    };
+    try {
+      const order = await orderService.placeOrder(orderData);
+      // Redirect to order status page with real order id
+      navigate(`/order/${order.id}`);
+    } catch (err) {
+      alert('Failed to place order.');
+    }
   };
 
   // Handle empty or not loaded cart

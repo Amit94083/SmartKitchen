@@ -110,7 +110,48 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
-    // No need for OrderItemRepository, use order.getOrderItems()
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        String email = null;
+        if (userDetails != null) {
+            email = userDetails.getUsername();
+        } else {
+            Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            } else if (principal instanceof String) {
+                email = (String) principal;
+            }
+        }
+        if (email == null) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = userRepository.findByEmail(email).orElseThrow();
+        Order order = orderRepository.findById(id).orElse(null);
+        if (order == null || !order.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(404).build();
+        }
+        java.util.List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item ->
+            new OrderItemDto(
+                item.getId(),
+                item.getProductName(),
+                item.getQuantity(),
+                item.getPrice()
+            )
+        ).collect(java.util.stream.Collectors.toList());
+        OrderDto responseDto = new OrderDto(
+            order.getId(),
+            order.getOrderTime(),
+            order.getStatus(),
+            order.getTotalAmount(),
+            itemDtos,
+            order.getAddressLabel(),
+            order.getAddressFull(),
+            order.getAddressApartment(),
+            order.getAddressInstructions()
+        );
+        return ResponseEntity.ok(responseDto);
+    }
 
     @GetMapping("/my")
     public ResponseEntity<List<OrderDto>> getMyOrders(@AuthenticationPrincipal UserDetails userDetails) {

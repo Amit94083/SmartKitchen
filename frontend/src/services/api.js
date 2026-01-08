@@ -1,3 +1,13 @@
+export const orderService = {
+  placeOrder: async (orderData) => {
+    const response = await api.post('/orders', orderData);
+    return response.data;
+  },
+  getOrderById: async (orderId) => {
+    const response = await api.get(`/orders/${orderId}`);
+    return response.data;
+  },
+};
 export const cartService = {
   addToCart: async (userId, menuItemId, quantity = 1) => {
     const response = await api.post('/cart/add', {}, {

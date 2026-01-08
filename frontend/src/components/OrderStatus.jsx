@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, MapPin, DollarSign } from "lucide-react";
+import { orderService } from "../services/api";
 
 const ORDER_STEPS = [
   { label: "Order Placed", key: "placed", icon: <Clock className="w-6 h-6" /> },
@@ -18,28 +19,15 @@ export default function OrderStatus() {
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    // TODO: Replace with your actual API call
-    setOrder({
-      id: orderId,
-      status: "placed", // or "confirmed", etc.
-      createdAt: new Date().toISOString(),
-      estimatedDelivery: "6:26 PM",
-      address: {
-        line1: "cfkdk, nfk",
-        note: "nr",
-      },
-      items: [
-        {
-          name: "Mediterranean Mezze Platter",
-          qty: 1,
-          price: 349,
-          image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=80&q=80"
-        }
-      ],
-      subtotal: 349,
-      deliveryFee: 40,
-      total: 389,
-    });
+    async function fetchOrder() {
+      try {
+        const data = await orderService.getOrderById(orderId);
+        setOrder(data);
+      } catch (err) {
+        setOrder(null);
+      }
+    }
+    fetchOrder();
   }, [orderId]);
 
   if (!order) return <div>Loading...</div>;
@@ -54,7 +42,7 @@ export default function OrderStatus() {
           <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&#8592;</button>
           <div>
             <div className="font-semibold text-lg">Order #{order.id}</div>
-            <div className="text-gray-400 text-sm">{new Date(order.createdAt).toLocaleString()}</div>
+            <div className="text-gray-400 text-sm">{order.orderTime ? new Date(order.orderTime).toLocaleString() : ""}</div>
           </div>
           <span className="ml-auto bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold capitalize">pending</span>
         </div>
@@ -77,48 +65,54 @@ export default function OrderStatus() {
             ))}
           </div>
           {/* Estimated Delivery */}
-          <div className="bg-orange-50 rounded-xl p-4 flex items-center gap-3 mb-8">
-            <Clock className="text-orange-500 w-5 h-5" />
-            <div>
-              <div className="text-xs text-gray-500">Estimated Delivery</div>
-              <div className="font-bold text-lg text-orange-600">{order.estimatedDelivery}</div>
-            </div>
-          </div>
+           <div className="bg-orange-50 rounded-xl p-4 flex items-center gap-3 mb-8">
+             <Clock className="text-orange-500 w-5 h-5" />
+             <div>
+               <div className="text-xs text-gray-500">Estimated Delivery</div>
+               <div className="font-bold text-lg text-orange-600">{
+                 (() => {
+                   const now = new Date();
+                   now.setMinutes(now.getMinutes() + 30);
+                   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                 })()
+               }</div>
+             </div>
+           </div>
           {/* Delivery Address */}
           <div className="bg-gray-50 rounded-xl p-4 mb-4">
             <div className="font-semibold mb-1 flex items-center gap-2">
               <MapPin className="text-gray-400 w-5 h-5" /> Delivery Address
             </div>
-            <div>{order.address.line1}</div>
-            <div className="text-xs text-gray-400 italic mt-1">Note: {order.address.note}</div>
+            <div>{order.addressFull}</div>
+            <div className="text-xs text-gray-400 italic mt-1">Apt: {order.addressApartment} | Note: {order.addressInstructions}</div>
           </div>
           {/* Order Items & Summary */}
           <div className="bg-gray-50 rounded-xl p-4 mt-4">
-            <div className="font-semibold mb-3 flex items-center gap-2 text-base">
-              <DollarSign className="w-5 h-5 text-gray-500" /> Order Items
-            </div>
-            {order.items.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 mb-3">
-                <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+             <div className="font-semibold mb-3 text-base">
+               Order Items
+             </div>
+            {order.orderItems && order.orderItems.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3 py-2 border-b last:border-b-0">
+                {/* No image in backend, so just show name */}
                 <div className="flex-1">
-                  <div className="font-semibold text-gray-800">{item.name}</div>
-                  <div className="text-xs text-gray-500">Qty: {item.qty}</div>
+                  <div className="font-medium">{item.productName}</div>
+                  <div className="text-xs text-gray-400">Qty: {item.quantity}</div>
                 </div>
-                <div className="font-semibold text-gray-800">₹{item.price.toFixed(2)}</div>
+                <div className="font-semibold">₹{item.price}</div>
               </div>
             ))}
             <hr className="my-3" />
             <div className="flex justify-between text-gray-700 mb-1">
               <span>Subtotal</span>
-              <span>₹{order.subtotal.toFixed(2)}</span>
+              <span>₹{order.totalAmount ? order.totalAmount.toFixed(2) : 0}</span>
             </div>
             <div className="flex justify-between text-gray-700 mb-1">
               <span>Delivery Fee</span>
-              <span>₹{order.deliveryFee}</span>
+              <span>₹{order.deliveryFee !== undefined && order.deliveryFee !== null ? order.deliveryFee : 0}</span>
             </div>
             <div className="flex justify-between font-bold text-lg mt-2">
               <span>Total</span>
-              <span className="text-orange-500">₹{order.total.toFixed(2)}</span>
+              <span className="text-orange-500">₹{order.totalAmount ? order.totalAmount.toFixed(2) : 0}</span>
             </div>
           </div>
         </div>
