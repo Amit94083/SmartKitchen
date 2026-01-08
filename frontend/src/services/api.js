@@ -7,6 +7,10 @@ export const orderService = {
     const response = await api.get(`/orders/${orderId}`);
     return response.data;
   },
+  getMyOrders: async () => {
+    const response = await api.get('/orders/my');
+    return response.data;
+  },
 };
 export const cartService = {
   addToCart: async (userId, menuItemId, quantity = 1) => {
