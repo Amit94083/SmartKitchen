@@ -41,6 +41,14 @@ public class CartService {
             return cartRepository.save(cart);
         });
     }
+    @Transactional
+    public Cart clearCart(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        Cart cart = getOrCreateCart(user);
+        cart.getItems().clear(); // Remove all items from the cart
+        cart.setActive(false);
+        return cartRepository.save(cart);
+    }
 
     @Transactional
     public Cart addItemToCart(Long userId, Long menuItemId, int quantity) {

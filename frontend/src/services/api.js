@@ -31,6 +31,12 @@ export const cartService = {
     });
     return response.data;
   },
+  clearCart: async (userId) => {
+    const response = await api.delete('/cart/clear', {
+      params: { userId }
+    });
+    return response.data;
+  },
 };
 export const userService = {
   updateProfile: async (profileData) => {

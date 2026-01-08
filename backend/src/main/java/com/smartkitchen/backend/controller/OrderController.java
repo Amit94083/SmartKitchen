@@ -27,6 +27,8 @@ public class OrderController {
     private OrderRepository orderRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private com.smartkitchen.backend.service.CartService cartService;
 
     @PostMapping("")
     public ResponseEntity<OrderDto> createOrder(@AuthenticationPrincipal UserDetails userDetails, @RequestBody OrderDto orderDto) {
@@ -86,6 +88,9 @@ public class OrderController {
         }
 
         Order saved = orderRepository.save(order);
+
+        // Clear the user's cart after placing the order
+        cartService.clearCart(user.getId());
 
         // Build response DTO
         java.util.List<OrderItemDto> itemDtos = saved.getOrderItems().stream().map(item ->
