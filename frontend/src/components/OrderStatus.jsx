@@ -74,19 +74,27 @@ export default function OrderStatus() {
             ))}
           </div>
           {/* Estimated Delivery */}
-           <div className="bg-orange-50 rounded-xl p-4 flex items-center gap-3 mb-8">
-             <Clock className="text-orange-500 w-5 h-5" />
-             <div>
-               <div className="text-xs text-gray-500">Estimated Delivery</div>
-               <div className="font-bold text-lg text-orange-600">{
-                 (() => {
-                   const now = new Date();
-                   now.setMinutes(now.getMinutes() + 30);
-                   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                 })()
-               }</div>
-             </div>
-           </div>
+          <div className="bg-orange-50 rounded-xl p-4 flex items-center gap-3 mb-8">
+            <Clock className="text-orange-500 w-5 h-5" />
+            <div>
+              <div className="text-xs text-gray-500">Estimated Delivery</div>
+              <div className="font-bold text-lg text-orange-600">
+                {(() => {
+                  // If delivered or cancelled, show status
+                  if (order.status && ["delivered", "cancelled"].includes(order.status.toLowerCase())) {
+                    return order.status.charAt(0).toUpperCase() + order.status.slice(1);
+                  }
+                  // Otherwise, estimate from orderTime
+                  if (order.orderTime) {
+                    const orderDate = new Date(order.orderTime);
+                    orderDate.setMinutes(orderDate.getMinutes() + 30);
+                    return orderDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  }
+                  return "-";
+                })()}
+              </div>
+            </div>
+          </div>
           {/* Delivery Address */}
           <div className="bg-gray-50 rounded-xl p-4 mb-4">
             <div className="font-semibold mb-1 flex items-center gap-2">
