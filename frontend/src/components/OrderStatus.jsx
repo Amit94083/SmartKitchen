@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, MapPin, DollarSign } from "lucide-react";
 import { orderService } from "../services/api";
+import { imageMap } from "../assets/food/index";
 
 const ORDER_STEPS = [
   { label: "Order Placed", key: "placed", icon: <Clock className="w-6 h-6" /> },
@@ -46,8 +47,8 @@ export default function OrderStatus() {
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
-          <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&#8592;</button>
+        <div className="flex items-center gap-2 mb-2 relative">
+          <button onClick={() => navigate('/orders')} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&#8592;</button>
           <div>
             <div className="font-semibold text-lg">Order #{order.id}</div>
             <div className="text-gray-400 text-sm">{order.orderTime ? new Date(order.orderTime).toLocaleString() : ""}</div>
@@ -99,16 +100,50 @@ export default function OrderStatus() {
              <div className="font-semibold mb-3 text-base">
                Order Items
              </div>
-            {order.orderItems && order.orderItems.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 py-2 border-b last:border-b-0">
-                {/* No image in backend, so just show name */}
-                <div className="flex-1">
-                  <div className="font-medium">{item.productName}</div>
-                  <div className="text-xs text-gray-400">Qty: {item.quantity}</div>
+            {order.orderItems && order.orderItems.map((item, idx) => {
+              const baseName = item.productName ? item.productName.replace(/\s/g, "") : "";
+              const lowerBase = baseName.toLowerCase();
+              const candidates = [
+                item.image,
+                item.productImage,
+                baseName + ".jpg",
+                baseName + ".jpeg",
+                baseName + "Pizza.jpg",
+                baseName + "Pizza.jpeg",
+                lowerBase + ".jpg",
+                lowerBase + ".jpeg",
+                lowerBase + "pizza.jpg",
+                lowerBase + "pizza.jpeg",
+                "MexicanDelightPizza.jpg",
+                "MexicanDelight.jpg"
+              ].filter(Boolean);
+              let imgSrc = null;
+              for (const key of candidates) {
+                if (imageMap[key]) {
+                  imgSrc = imageMap[key];
+                  break;
+                }
+                const foundKey = Object.keys(imageMap).find(k => k.toLowerCase() === key.toLowerCase());
+                if (foundKey) {
+                  imgSrc = imageMap[foundKey];
+                  break;
+                }
+              }
+              return (
+                <div key={idx} className="flex items-center gap-3 py-2 border-b last:border-b-0">
+                  {imgSrc ? (
+                    <img src={imgSrc} alt={item.productName} className="w-12 h-12 rounded object-cover border" />
+                  ) : (
+                    <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center border" />
+                  )}
+                  <div className="flex-1">
+                    <div className="font-medium">{item.productName}</div>
+                    <div className="text-xs text-gray-400">Qty: {item.quantity}</div>
+                  </div>
+                  <div className="font-semibold">₹{item.price}</div>
                 </div>
-                <div className="font-semibold">₹{item.price}</div>
-              </div>
-            ))}
+              );
+            })}
             <hr className="my-3" />
             <div className="flex justify-between text-gray-700 mb-1">
               <span>Subtotal</span>

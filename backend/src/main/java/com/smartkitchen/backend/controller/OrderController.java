@@ -30,6 +30,34 @@ public class OrderController {
     @Autowired
     private com.smartkitchen.backend.service.CartService cartService;
 
+    // GET /api/orders - Return all orders (for admin or general listing)
+    @GetMapping("")
+    public ResponseEntity<List<OrderDto>> getAllOrders() {
+        List<Order> orders = orderRepository.findAll();
+        List<OrderDto> dtos = orders.stream().map(o -> {
+            List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item ->
+                new OrderItemDto(
+                    item.getId(),
+                    item.getProductName(),
+                    item.getQuantity(),
+                    item.getPrice()
+                )
+            ).collect(Collectors.toList());
+            return new OrderDto(
+                o.getId(),
+                o.getOrderTime(),
+                o.getStatus(),
+                o.getTotalAmount(),
+                itemDtos,
+                o.getAddressLabel(),
+                o.getAddressFull(),
+                o.getAddressApartment(),
+                o.getAddressInstructions()
+            );
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
     @PostMapping("")
     public ResponseEntity<OrderDto> createOrder(@AuthenticationPrincipal UserDetails userDetails, @RequestBody OrderDto orderDto) {
         String email = null;
@@ -46,7 +74,10 @@ public class OrderController {
         if (email == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
 
 
         // Create new Order and set fields

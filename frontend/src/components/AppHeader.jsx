@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Box, User, ShoppingCart } from "lucide-react";
+import { Box, User, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
@@ -21,19 +21,20 @@ export default function AppHeader() {
     <header className="w-full flex items-center justify-between px-10 py-3 bg-white shadow-md fixed top-0 left-0 z-30 h-[80px]">
       <div className="flex items-center gap-3">
         <button
-          className="bg-orange-400 text-white rounded-full w-11 h-11 flex items-center justify-center text-lg hover:bg-orange-500 transition"
+          className="bg-gradient-to-br from-orange-400 to-orange-500 text-white rounded-xl w-11 h-11 flex items-center justify-center text-lg font-extrabold shadow-sm hover:brightness-105 transition"
           onClick={() => navigate('/home')}
           aria-label="Home"
         >
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"></path></svg>
+          CK
         </button>
+        <span className="text-xl font-semibold text-gray-900">CloudKitchen</span>
       </div>
       <nav className="flex items-center gap-7">
         <button
           className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition ${isActive('/restaurant/1') ? 'bg-orange-100 text-orange-600' : 'text-gray-700 hover:bg-gray-100'}`}
           onClick={() => navigate('/restaurant/1')}
         >
-          <span className="w-5 h-5">🍽️</span> Menu
+          <Home className="w-5 h-5" /> Menu
         </button>
         <button
           className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition ${isActive('/orders') ? 'bg-orange-100 text-orange-600' : 'text-gray-700 hover:bg-gray-100'}`}
