@@ -101,6 +101,7 @@ export default function Checkout() {
       return;
     }
     const orderData = {
+      userId: user.id, // Add userId to the request
       totalAmount: cartTotal,
       addressLabel: selectedAddress.label || selectedAddress.name,
       addressFull: selectedAddress.full,

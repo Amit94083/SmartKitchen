@@ -8,6 +8,8 @@ import com.smartkitchen.backend.repository.OrderRepository;
 import com.smartkitchen.backend.repository.UserRepository;
 import com.smartkitchen.backend.entity.OrderItem;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "http://localhost:3000")
 public class OrderController {
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
@@ -33,6 +36,7 @@ public class OrderController {
     // GET /api/orders - Return all orders (for admin or general listing)
     @GetMapping("")
     public ResponseEntity<List<OrderDto>> getAllOrders() {
+        logger.info("GET /api/orders called");
         List<Order> orders = orderRepository.findAll();
         List<OrderDto> dtos = orders.stream().map(o -> {
             List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item ->
@@ -55,29 +59,25 @@ public class OrderController {
                 o.getAddressInstructions()
             );
         }).collect(Collectors.toList());
+        logger.info("GET /api/orders response: {}", dtos);
         return ResponseEntity.ok(dtos);
     }
 
     @PostMapping("")
-    public ResponseEntity<OrderDto> createOrder(@AuthenticationPrincipal UserDetails userDetails, @RequestBody OrderDto orderDto) {
-        String email = null;
-        if (userDetails != null) {
-            email = userDetails.getUsername();
-        } else {
-            Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
-                email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
-            } else if (principal instanceof String) {
-                email = (String) principal;
+    public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto orderDto) {
+        logger.info("POST /api/orders called with payload: {}", orderDto);
+        try {
+            if (orderDto.getUserId() == null) {
+                logger.error("User ID is required");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
             }
-        }
-        if (email == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
-        }
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
+            logger.info("Looking for user with ID: {}", orderDto.getUserId());
+            User user = userRepository.findById(orderDto.getUserId()).orElse(null);
+            if (user == null) {
+                logger.error("User not found for ID: {}", orderDto.getUserId());
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            }
+            logger.info("Found user: {}", user.getId());
 
 
         // Create new Order and set fields
@@ -143,28 +143,19 @@ public class OrderController {
             saved.getAddressApartment(),
             saved.getAddressInstructions()
         );
+        logger.info("POST /api/orders response: {}", responseDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        } catch (Exception e) {
+            logger.error("Error processing order: ", e);
+            throw e;
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDto> getOrderById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        String email = null;
-        if (userDetails != null) {
-            email = userDetails.getUsername();
-        } else {
-            Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
-                email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
-            } else if (principal instanceof String) {
-                email = (String) principal;
-            }
-        }
-        if (email == null) {
-            return ResponseEntity.status(401).build();
-        }
-        User user = userRepository.findByEmail(email).orElseThrow();
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable Long id) {
+        logger.info("GET /api/orders/{} called", id);
         Order order = orderRepository.findById(id).orElse(null);
-        if (order == null || !order.getUser().getId().equals(user.getId())) {
+        if (order == null) {
             return ResponseEntity.status(404).build();
         }
         java.util.List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item ->
@@ -186,26 +177,17 @@ public class OrderController {
             order.getAddressApartment(),
             order.getAddressInstructions()
         );
+        logger.info("GET /api/orders/{} response: {}", id, responseDto);
         return ResponseEntity.ok(responseDto);
     }
 
-    @GetMapping("/my")
-    public ResponseEntity<List<OrderDto>> getMyOrders(@AuthenticationPrincipal UserDetails userDetails) {
-        String email = null;
-        if (userDetails != null) {
-            email = userDetails.getUsername();
-        } else {
-            Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
-                email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
-            } else if (principal instanceof String) {
-                email = (String) principal;
-            }
+    @GetMapping("/my/{userId}")
+    public ResponseEntity<List<OrderDto>> getMyOrders(@PathVariable Long userId) {
+        logger.info("GET /api/orders/my/{} called", userId);
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).build();
         }
-        if (email == null) {
-            return ResponseEntity.status(401).build();
-        }
-        User user = userRepository.findByEmail(email).orElseThrow();
         List<Order> orders = orderRepository.findByUser(user);
         List<OrderDto> dtos = orders.stream().map(o -> {
             java.util.List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item ->
@@ -228,6 +210,7 @@ public class OrderController {
                 o.getAddressInstructions()
             );
         }).collect(Collectors.toList());
+        logger.info("GET /api/orders/my/{} response: {}", userId, dtos);
         return ResponseEntity.ok(dtos);
     }
 }

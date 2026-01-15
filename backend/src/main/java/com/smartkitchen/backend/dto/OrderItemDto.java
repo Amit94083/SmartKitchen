@@ -26,4 +26,14 @@ public class OrderItemDto {
 
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
+
+    @Override
+    public String toString() {
+        return "OrderItemDto{" +
+                "id=" + id +
+                ", productName='" + productName + '\'' +
+                ", quantity=" + quantity +
+                ", price=" + price +
+                '}';
+    }
 }

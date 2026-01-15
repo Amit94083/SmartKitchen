@@ -34,11 +34,18 @@ export default function Orders() {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const data = await orderService.getMyOrders();
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.id) {
+          console.log('No user found in localStorage');
+          setOrders([]);
+          return;
+        }
+        const data = await orderService.getMyOrders(user.id);
         // Sort orders by orderTime descending (latest first)
         const sorted = [...data].sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
         setOrders(sorted);
       } catch (err) {
+        console.error('Error fetching orders:', err);
         setOrders([]);
       }
     }
