@@ -67,36 +67,71 @@ const Signup = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="restaurantName" className="block text-sm font-medium text-gray-700">
-                Restaurant Name
+              <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
+                Account Type
               </label>
-              <input
-                id="restaurantName"
-                name="restaurantName"
-                type="text"
-                required
+              <select
+                id="userType"
+                name="userType"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter your restaurant name"
-                value={formData.restaurantName}
+                value={formData.userType}
                 onChange={handleChange}
-              />
+              >
+                <option value="RESTAURANT_OWNER">Restaurant Owner</option>
+                <option value="CUSTOMER">Customer</option>
+              </select>
             </div>
-            
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Owner Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
+
+            {formData.userType === 'RESTAURANT_OWNER' ? (
+              <>
+                <div>
+                  <label htmlFor="restaurantName" className="block text-sm font-medium text-gray-700">
+                    Restaurant Name
+                  </label>
+                  <input
+                    id="restaurantName"
+                    name="restaurantName"
+                    type="text"
+                    required
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter your restaurant name"
+                    value={formData.restaurantName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    Owner Name
+                  </label>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    required
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter owner's full name"
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
