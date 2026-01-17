@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from './Sidebar';
 import { ingredientService } from '../services/api';
-import { Search, Filter, Plus, X } from 'lucide-react';
+import { Search, Filter, Plus, X, Package, AlertCircle, TrendingUp, Droplet } from 'lucide-react';
 
 const Inventory = () => {
   const [ingredients, setIngredients] = useState([]);
@@ -232,28 +232,45 @@ const Inventory = () => {
 
         {/* Modal for Add/Update Ingredients */}
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4">
-              <div className="p-6 border-b border-gray-200">
+          <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl mx-4 transform transition-all animate-in">
+              {/* Header with gradient */}
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-3xl">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-[#23190f]">
-                    {modalTab === 'add' ? 'Add New Ingredient' : 'Update Ingredient'}
-                  </h2>
-                  <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm p-3 rounded-xl">
+                      <Package className="w-6 h-6 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {modalTab === 'add' ? 'Add New Ingredient' : 'Update Ingredient'}
+                    </h2>
+                  </div>
+                  <button 
+                    onClick={handleCloseModal} 
+                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all"
+                  >
                     <X className="w-6 h-6" />
                   </button>
                 </div>
                 
                 {/* Tabs */}
-                <div className="flex gap-4 mt-4">
+                <div className="flex gap-3 mt-5">
                   <button
-                    className={`px-4 py-2 rounded-lg font-semibold ${modalTab === 'add' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                    className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${
+                      modalTab === 'add' 
+                        ? 'bg-white text-orange-600 shadow-lg' 
+                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                    }`}
                     onClick={() => setModalTab('add')}
                   >
                     Add New
                   </button>
                   <button
-                    className={`px-4 py-2 rounded-lg font-semibold ${modalTab === 'update' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                    className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${
+                      modalTab === 'update' 
+                        ? 'bg-white text-orange-600 shadow-lg' 
+                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                    }`}
                     onClick={() => setModalTab('update')}
                   >
                     Update Existing
@@ -261,12 +278,15 @@ const Inventory = () => {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6">
+              <form onSubmit={handleSubmit} className="p-8">
                 {modalTab === 'update' && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Select Ingredient</label>
+                  <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200">
+                    <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-orange-600" />
+                      Select Ingredient to Update
+                    </label>
                     <select
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-4 py-3 border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white font-medium text-gray-700 shadow-sm"
                       value={selectedIngredient ? selectedIngredient.ingredientId : ''}
                       onChange={(e) => {
                         const ingredient = ingredients.find(i => i.ingredientId === parseInt(e.target.value));
@@ -301,91 +321,127 @@ const Inventory = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {modalTab === 'add' && (
                     <>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                          <Package className="w-4 h-4 text-orange-600" />
+                          Name
+                        </label>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
                           value={formData.name}
                           onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          placeholder="e.g., Tomatoes"
                           required
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Ingredient Type</label>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                          <Filter className="w-4 h-4 text-orange-600" />
+                          Ingredient Type
+                        </label>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
                           value={formData.ingredientType}
                           onChange={(e) => setFormData({...formData, ingredientType: e.target.value})}
+                          placeholder="e.g., Vegetable"
                           required
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Unit</label>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                          <Droplet className="w-4 h-4 text-orange-600" />
+                          Unit
+                        </label>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
                           value={formData.unit}
                           onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                          placeholder="e.g., kg, liters"
                           required
                         />
                       </div>
                     </>
                   )}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">{modalTab === 'update' ? 'Update Current Quantity' : 'Current Quantity'}</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      value={formData.currentQuantity}
-                      onChange={(e) => setFormData({...formData, currentQuantity: e.target.value})}
-                      required
-                      placeholder={modalTab === 'update' && selectedIngredient ? `${selectedIngredient.currentQuantity}` : ''}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">{modalTab === 'update' ? 'Update Threshold Quantity' : 'Threshold Quantity'}</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      value={formData.thresholdQuantity}
-                      onChange={(e) => setFormData({...formData, thresholdQuantity: e.target.value})}
-                      required
-                      placeholder={modalTab === 'update' && selectedIngredient ? `${selectedIngredient.thresholdQuantity}` : ''}
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-orange-600" />
+                      {modalTab === 'update' ? 'Add to Current Quantity' : 'Current Quantity'}
+                    </label>
+                    <div className="relative">
                       <input
-                        type="checkbox"
-                        className="w-5 h-5 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                        checked={formData.isActive}
-                        onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                        type="number"
+                        step="0.01"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
+                        value={formData.currentQuantity}
+                        onChange={(e) => setFormData({...formData, currentQuantity: e.target.value})}
+                        required
+                        placeholder={modalTab === 'update' && selectedIngredient ? `Current: ${selectedIngredient.currentQuantity}` : 'Enter quantity'}
                       />
-                      <span className="text-sm font-semibold text-gray-700">Is Active</span>
+                      {modalTab === 'update' && selectedIngredient && (
+                        <div className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Current stock: {selectedIngredient.currentQuantity} {selectedIngredient.unit}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-orange-600" />
+                      {modalTab === 'update' ? 'Update Threshold Quantity' : 'Threshold Quantity'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
+                        value={formData.thresholdQuantity}
+                        onChange={(e) => setFormData({...formData, thresholdQuantity: e.target.value})}
+                        required
+                        placeholder={modalTab === 'update' && selectedIngredient ? `Current: ${selectedIngredient.thresholdQuantity}` : 'Min stock level'}
+                      />
+                      {modalTab === 'update' && selectedIngredient && (
+                        <div className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Current threshold: {selectedIngredient.thresholdQuantity} {selectedIngredient.unit}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center md:col-span-2">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          className="w-6 h-6 text-orange-500 focus:ring-orange-500 border-2 border-gray-300 rounded-lg cursor-pointer"
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                        />
+                      </div>
+                      <span className="text-sm font-bold text-gray-800 group-hover:text-orange-600 transition-colors">Is Active</span>
                     </label>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 mt-6">
+                <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold"
+                    className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all shadow-sm hover:shadow"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold"
+                    className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
                   >
-                    {modalTab === 'add' ? 'Add Ingredient' : 'Update Ingredient'}
+                    {modalTab === 'add' ? '✓ Add Ingredient' : '✓ Update Ingredient'}
                   </button>
                 </div>
               </form>

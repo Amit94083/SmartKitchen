@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ingredientService, analyticsService, orderService } from '../services/api';
 import Sidebar from './Sidebar';
-import { ShoppingBag, CreditCard, TrendingUp, User } from 'lucide-react';
+import { ShoppingBag, CreditCard, TrendingUp, User, Search } from 'lucide-react';
 
 const Dashboard = () => {
 
@@ -154,43 +154,43 @@ const Dashboard = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="flex gap-6 mb-8">
-          <div className="bg-orange-500 text-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
-            <div className="text-lg font-semibold mb-2">Orders {period}</div>
-            <div className="text-3xl font-bold mb-1">{periodOrders.length}</div>
-            <div className="text-sm">&nbsp;</div>
-            <span className="absolute top-6 right-6 bg-orange-100 rounded-xl p-2">
-              <ShoppingBag className="w-7 h-7 text-orange-600" />
+        <div className="flex gap-4 mb-8">
+          <div className="bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-2xl flex-1 p-5 shadow-md relative overflow-hidden">
+            <div className="text-sm font-medium mb-1 opacity-90">Orders {period}</div>
+            <div className="text-4xl font-bold mb-1">{periodOrders.length}</div>
+            <div className="text-xs opacity-75">&nbsp;</div>
+            <span className="absolute top-4 right-4 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-2.5">
+              <ShoppingBag className="w-6 h-6 text-white" />
             </span>
           </div>
-          <div className="bg-green-500 text-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
-            <div className="text-lg font-semibold mb-2">Revenue {period}</div>
-            <div className="text-3xl font-bold mb-1">
+          <div className="bg-gradient-to-br from-green-400 to-green-600 text-white rounded-2xl flex-1 p-5 shadow-md relative overflow-hidden">
+            <div className="text-sm font-medium mb-1 opacity-90">Revenue {period}</div>
+            <div className="text-4xl font-bold mb-1">
               ₹{
                 periodOrders
                   .filter(o => o.status && (o.status.toLowerCase() === 'delivered' || o.status.toLowerCase() === 'done'))
                   .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
               }
             </div>
-            <div className="text-sm">&nbsp;</div>
-            <span className="absolute top-6 right-6 bg-green-100 rounded-xl p-2">
-              <CreditCard className="w-7 h-7 text-green-600" />
+            <div className="text-xs opacity-75">&nbsp;</div>
+            <span className="absolute top-4 right-4 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-2.5">
+              <CreditCard className="w-6 h-6 text-white" />
             </span>
           </div>
-          <div className="bg-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
-            <div className="text-lg font-semibold mb-2">Avg Order Value</div>
-            <div className="text-3xl font-bold mb-1">₹{avgOrderValue}</div>
-            <div className="text-sm text-gray-600">{periodOrders.length > 0 ? '' : 'No orders yet'}</div>
-            <span className="absolute top-6 right-6 bg-orange-100 rounded-xl p-2">
-              <TrendingUp className="w-7 h-7 text-orange-600" />
+          <div className="bg-white rounded-2xl flex-1 p-5 shadow-sm border border-gray-100 relative overflow-hidden">
+            <div className="text-sm font-medium mb-1 text-gray-700">Avg Order Value</div>
+            <div className="text-4xl font-bold mb-1 text-gray-900">₹{avgOrderValue}</div>
+            <div className="text-xs text-gray-500">{periodOrders.length > 0 ? '' : 'No orders yet'}</div>
+            <span className="absolute top-4 right-4 bg-orange-50 rounded-xl p-2.5">
+              <TrendingUp className="w-6 h-6 text-orange-500" />
             </span>
           </div>
-          <div className="bg-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
-            <div className="text-lg font-semibold mb-2">Active Customers</div>
-            <div className="text-3xl font-bold mb-1 text-[#23190f]">{activeCustomers}</div>
-            <div className="text-sm text-gray-600">{newCustomersCount} {newCustomersLabel}</div>
-            <span className="absolute top-6 right-6 bg-orange-100 rounded-xl p-2">
-              <User className="w-7 h-7 text-orange-600" />
+          <div className="bg-white rounded-2xl flex-1 p-5 shadow-sm border border-gray-100 relative overflow-hidden">
+            <div className="text-sm font-medium mb-1 text-gray-700">Active Customers</div>
+            <div className="text-4xl font-bold mb-1 text-gray-900">{activeCustomers}</div>
+            <div className="text-xs text-gray-500">{newCustomersCount} {newCustomersLabel}</div>
+            <span className="absolute top-4 right-4 bg-orange-50 rounded-xl p-2.5">
+              <User className="w-6 h-6 text-orange-500" />
             </span>
           </div>
         </div>
@@ -216,12 +216,15 @@ const Dashboard = () => {
                 </button>
               ))}
             </div>
-            <input
-              className="w-full mb-4 px-4 py-2 rounded-lg border border-gray-200"
-              placeholder="Search by customer name or order ID..."
-              value={orderSearch}
-              onChange={e => setOrderSearch(e.target.value)}
-            />
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200"
+                placeholder="Search by customer name or order ID..."
+                value={orderSearch}
+                onChange={e => setOrderSearch(e.target.value)}
+              />
+            </div>
             {(() => {
               let filtered = periodOrders;
               if (orderFilter === 'Pending') {
@@ -242,8 +245,11 @@ const Dashboard = () => {
                 return <div className="bg-white rounded-xl p-4 mb-3 flex justify-between items-center shadow text-gray-500">No orders found</div>;
               }
               return filtered.map(order => (
-                <div key={order.id} className="bg-white rounded-xl p-4 mb-3 flex justify-between items-center shadow">
-                  <div>
+                <div key={order.id} className="bg-white rounded-xl p-4 mb-3 flex items-center gap-3 shadow">
+                  <div className="bg-gray-100 rounded-full p-3 flex-shrink-0">
+                    <User className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
                     <div className="font-semibold">
                       {order.customerName || 'Customer'}{' '}
                       <span className={`bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2`}>{order.status}</span>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { restaurantService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
+import { MapPin, Phone, Image, Star, Calendar, Clock, Edit2, Save, X } from 'lucide-react';
 
 
 const RestaurantDetails = () => {
@@ -88,72 +89,162 @@ const RestaurantDetails = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f9f7f4]">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar activeTab="restaurant-details" />
-      <main className="flex-1 px-10 py-10 flex justify-center items-start">
-        <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-10">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-[#23190f] mb-1">Restaurant Details</h2>
-              <p className="text-gray-500">Manage your restaurant profile and info</p>
-            </div>
-            {restaurant?.imageUrl && (
-              <img src={restaurant.imageUrl} alt="Restaurant" className="h-20 w-20 object-cover rounded-xl border border-gray-200 shadow" />
-            )}
+      <main className="flex-1 px-10 py-8">
+        <div className="max-w-4xl">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Restaurant Details</h1>
+            <p className="text-gray-500">Manage your restaurant profile and info</p>
           </div>
-          {error && <div className="text-red-500 mb-4">{error}</div>}
-          <div className="bg-[#f9f7f4] rounded-xl p-6">
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             {edit ? (
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
-                  <input name="name" value={form.name} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea name="description" value={form.description} onChange={handleChange} className="w-full border rounded px-3 py-2" rows={2} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Address</label>
-                  <input name="address" value={form.address} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Phone</label>
-                  <input name="phone" value={form.phone} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Image URL</label>
-                  <input name="imageUrl" value={form.imageUrl} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-                </div>
-                <div className="flex items-center gap-2 mt-6">
-                  <label className="block text-sm font-medium mb-1">Open</label>
-                  <input type="checkbox" name="isOpen" checked={form.isOpen} onChange={handleChange} />
-                </div>
-                <div className="col-span-2 flex gap-3 mt-4">
-                  <button type="button" className="bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold shadow" onClick={handleSave}>Save</button>
-                  <button type="button" className="bg-gray-200 px-6 py-2 rounded-lg font-semibold" onClick={() => setEdit(false)}>Cancel</button>
-                </div>
-              </form>
+              <div>
+                {/* Edit Mode */}
+                <form className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                      <input 
+                        name="name" 
+                        value={form.name} 
+                        onChange={handleChange} 
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                      <input 
+                        name="phone" 
+                        value={form.phone} 
+                        onChange={handleChange} 
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea 
+                      name="description" 
+                      value={form.description} 
+                      onChange={handleChange} 
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
+                    <input 
+                      name="address" 
+                      value={form.address} 
+                      onChange={handleChange} 
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Image URL</label>
+                    <input 
+                      name="imageUrl" 
+                      value={form.imageUrl} 
+                      onChange={handleChange} 
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      name="isOpen" 
+                      checked={form.isOpen} 
+                      onChange={handleChange}
+                      className="w-4 h-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                    />
+                    <label className="text-sm font-semibold text-gray-700">Is Active</label>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button 
+                      type="button" 
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm transition-colors"
+                      onClick={handleSave}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      type="button" 
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg font-semibold border border-gray-300 transition-colors"
+                      onClick={() => setEdit(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="mb-2"><span className="font-medium">Name:</span> {restaurant?.name || '-'}</div>
-                  <div className="mb-2"><span className="font-medium">Description:</span> {restaurant?.description || '-'}</div>
-                  <div className="mb-2"><span className="font-medium">Address:</span> {restaurant?.address || '-'}</div>
-                  <div className="mb-2"><span className="font-medium">Phone:</span> {restaurant?.phone || '-'}</div>
-                  <div className="mb-2"><span className="font-medium">Open:</span> {restaurant?.isOpen ? 'Yes' : 'No'}</div>
+              <div>
+                {/* View Mode */}
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-5">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Name:</div>
+                      <div className="text-base text-gray-900">{restaurant?.name || '-'}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Image URL:</div>
+                      <div className="text-sm text-gray-700">{restaurant?.imageUrl || '-'}</div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Description:</div>
+                      <div className="text-base text-gray-900">{restaurant?.description || '-'}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Address:</div>
+                      <div className="text-base text-gray-900">{restaurant?.address || '-'}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Phone:</div>
+                      <div className="text-base text-gray-900">{restaurant?.phone || '-'}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Open:</div>
+                      <div className="text-base text-gray-900">{restaurant?.isOpen ? 'Yes' : 'No'}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Rating:</div>
+                      <div className="text-base text-gray-900">{restaurant?.rating || 0}</div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <div className="text-sm font-semibold text-gray-600 mb-1">Created At:</div>
+                      <div className="text-base text-gray-900">{restaurant?.createdAt ? new Date(restaurant.createdAt).toLocaleString() : '-'}</div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="mb-2"><span className="font-medium">Image URL:</span> {restaurant?.imageUrl || '-'}</div>
-                  {restaurant?.imageUrl && (
-                    <div className="mb-2"><img src={restaurant.imageUrl} alt="Restaurant" className="max-h-32 rounded-xl border border-gray-200 shadow" /></div>
-                  )}
-                  <div className="mb-2"><span className="font-medium">Rating:</span> {restaurant?.rating !== undefined ? restaurant.rating : '-'}</div>
-                  <div className="mb-2"><span className="font-medium">Created At:</span> {restaurant?.createdAt ? new Date(restaurant.createdAt).toLocaleString() : '-'}</div>
-                </div>
-                <div className="col-span-2 mt-4">
-                  <button className="bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold shadow" onClick={() => setEdit(true)}>
-                    {restaurant ? 'Edit' : 'Add Restaurant'}
+
+                <div className="mt-6">
+                  <button 
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm transition-colors"
+                    onClick={() => setEdit(true)}
+                  >
+                    Edit
                   </button>
                 </div>
               </div>
