@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
+
 public class OrderDto {
     private Long id;
     private LocalDateTime orderTime;
@@ -12,6 +13,7 @@ public class OrderDto {
     private Double totalAmount;
     private List<OrderItemDto> orderItems;
     private Long userId;
+    private String customerName;
 
     // Address fields
     private String addressLabel;
@@ -19,9 +21,23 @@ public class OrderDto {
     private String addressApartment;
     private String addressInstructions;
 
-
     public OrderDto() {}
 
+    public OrderDto(Long id, LocalDateTime orderTime, String status, Double totalAmount, List<OrderItemDto> orderItems,
+                    String addressLabel, String addressFull, String addressApartment, String addressInstructions, String customerName) {
+        this.id = id;
+        this.orderTime = orderTime;
+        this.status = status;
+        this.totalAmount = totalAmount;
+        this.orderItems = orderItems;
+        this.addressLabel = addressLabel;
+        this.addressFull = addressFull;
+        this.addressApartment = addressApartment;
+        this.addressInstructions = addressInstructions;
+        this.customerName = customerName;
+    }
+
+    // Constructor without customerName (for POST response in OrderController)
     public OrderDto(Long id, LocalDateTime orderTime, String status, Double totalAmount, List<OrderItemDto> orderItems,
                     String addressLabel, String addressFull, String addressApartment, String addressInstructions) {
         this.id = id;
@@ -34,6 +50,8 @@ public class OrderDto {
         this.addressApartment = addressApartment;
         this.addressInstructions = addressInstructions;
     }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }

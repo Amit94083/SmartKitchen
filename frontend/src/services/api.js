@@ -1,3 +1,10 @@
+// Analytics Service
+export const analyticsService = {
+  getBestSellers: async (limit = 5) => {
+    const response = await api.get(`/best-sellers?limit=${limit}`);
+    return response.data;
+  },
+};
 // Ingredient Service
 export const ingredientService = {
   getAllIngredients: async () => {
@@ -24,6 +31,10 @@ export const orderService = {
   },
   getMyOrders: async (userId) => {
     const response = await api.get(`/orders/my/${userId}`);
+    return response.data;
+  },
+  getAllOrders: async () => {
+    const response = await api.get('/orders');
     return response.data;
   },
 };

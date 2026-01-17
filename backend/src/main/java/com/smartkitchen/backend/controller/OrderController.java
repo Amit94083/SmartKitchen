@@ -47,6 +47,7 @@ public class OrderController {
                     item.getPrice()
                 )
             ).collect(Collectors.toList());
+            String customerName = o.getUser() != null ? o.getUser().getName() : "";
             return new OrderDto(
                 o.getId(),
                 o.getOrderTime(),
@@ -56,7 +57,8 @@ public class OrderController {
                 o.getAddressLabel(),
                 o.getAddressFull(),
                 o.getAddressApartment(),
-                o.getAddressInstructions()
+                o.getAddressInstructions(),
+                customerName
             );
         }).collect(Collectors.toList());
         logger.info("GET /api/orders response: {}", dtos);
@@ -84,7 +86,7 @@ public class OrderController {
         Order order = new Order();
         order.setUser(user);
         order.setOrderTime(java.time.LocalDateTime.now());
-        order.setStatus("Order Placed");
+        order.setStatus("Pending");
         order.setTotalAmount(orderDto.getTotalAmount());
 
         // Use address from request if provided, else fallback to user entity
