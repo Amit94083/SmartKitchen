@@ -101,8 +101,8 @@ const Inventory = () => {
               ? Number(selectedIngredient.currentQuantity) + Number(formData.currentQuantity)
               : selectedIngredient.currentQuantity,
           thresholdQuantity:
-            formData.thresholdQuantity !== '' && !isNaN(formData.thresholdQuantity)
-              ? Number(selectedIngredient.thresholdQuantity) + Number(formData.thresholdQuantity)
+            formData.thresholdQuantity !== '' && !isNaN(formData.thresholdQuantity) && Number(formData.thresholdQuantity) > 0
+              ? Number(formData.thresholdQuantity)
               : selectedIngredient.thresholdQuantity,
         };
         // If the user left the field blank, don't send it in the update
