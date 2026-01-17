@@ -93,11 +93,35 @@ const Inventory = () => {
       if (modalTab === 'add') {
         await ingredientService.createIngredient(formData);
       } else {
-        await ingredientService.updateIngredient(selectedIngredient.ingredientId, formData);
+        // Only update the field if the user entered a value
+        const updatedData = {
+          ...formData,
+          currentQuantity:
+            formData.currentQuantity !== '' && !isNaN(formData.currentQuantity)
+              ? Number(selectedIngredient.currentQuantity) + Number(formData.currentQuantity)
+              : selectedIngredient.currentQuantity,
+          thresholdQuantity:
+            formData.thresholdQuantity !== '' && !isNaN(formData.thresholdQuantity)
+              ? Number(selectedIngredient.thresholdQuantity) + Number(formData.thresholdQuantity)
+              : selectedIngredient.thresholdQuantity,
+        };
+        // If the user left the field blank, don't send it in the update
+        if (formData.currentQuantity === '' || isNaN(formData.currentQuantity)) {
+          delete updatedData.currentQuantity;
+        }
+        if (formData.thresholdQuantity === '' || isNaN(formData.thresholdQuantity)) {
+          delete updatedData.thresholdQuantity;
+        }
+        await ingredientService.updateIngredient(selectedIngredient.ingredientId, updatedData);
       }
       // Refresh ingredients
       const data = await ingredientService.getAllIngredients();
       setIngredients(data);
+      setFormData(formData => ({
+        ...formData,
+        currentQuantity: '',
+        thresholdQuantity: ''
+      }));
       handleCloseModal();
     } catch (err) {
       console.error('Failed to save ingredient', err);
@@ -238,11 +262,12 @@ const Inventory = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6">
-                {modalTab === 'update' && !selectedIngredient && (
+                {modalTab === 'update' && (
                   <div className="mb-4">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Select Ingredient</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      value={selectedIngredient ? selectedIngredient.ingredientId : ''}
                       onChange={(e) => {
                         const ingredient = ingredients.find(i => i.ingredientId === parseInt(e.target.value));
                         if (ingredient) {
@@ -251,9 +276,19 @@ const Inventory = () => {
                             name: ingredient.name,
                             ingredientType: ingredient.ingredientType,
                             unit: ingredient.unit,
-                            currentQuantity: ingredient.currentQuantity,
-                            thresholdQuantity: ingredient.thresholdQuantity,
+                            currentQuantity: '',
+                            thresholdQuantity: '',
                             isActive: ingredient.isActive
+                          });
+                        } else {
+                          setSelectedIngredient(null);
+                          setFormData({
+                            name: '',
+                            ingredientType: '',
+                            unit: '',
+                            currentQuantity: '',
+                            thresholdQuantity: '',
+                            isActive: true
                           });
                         }
                       }}
@@ -267,63 +302,64 @@ const Inventory = () => {
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
+                  {modalTab === 'add' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Ingredient Type</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          value={formData.ingredientType}
+                          onChange={(e) => setFormData({...formData, ingredientType: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Unit</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          value={formData.unit}
+                          onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Ingredient Type</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      value={formData.ingredientType}
-                      onChange={(e) => setFormData({...formData, ingredientType: e.target.value})}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Unit</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      value={formData.unit}
-                      onChange={(e) => setFormData({...formData, unit: e.target.value})}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Current Quantity</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">{modalTab === 'update' ? 'Update Current Quantity' : 'Current Quantity'}</label>
                     <input
                       type="number"
                       step="0.01"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       value={formData.currentQuantity}
-                      onChange={(e) => setFormData({...formData, currentQuantity: parseFloat(e.target.value)})}
+                      onChange={(e) => setFormData({...formData, currentQuantity: e.target.value})}
                       required
+                      placeholder={modalTab === 'update' && selectedIngredient ? `${selectedIngredient.currentQuantity}` : ''}
                     />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Threshold Quantity</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">{modalTab === 'update' ? 'Update Threshold Quantity' : 'Threshold Quantity'}</label>
                     <input
                       type="number"
                       step="0.01"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       value={formData.thresholdQuantity}
-                      onChange={(e) => setFormData({...formData, thresholdQuantity: parseFloat(e.target.value)})}
+                      onChange={(e) => setFormData({...formData, thresholdQuantity: e.target.value})}
                       required
+                      placeholder={modalTab === 'update' && selectedIngredient ? `${selectedIngredient.thresholdQuantity}` : ''}
                     />
                   </div>
-
                   <div className="flex items-center">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
