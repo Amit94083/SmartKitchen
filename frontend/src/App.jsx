@@ -3,7 +3,10 @@ import Cart from './components/Cart';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-
+import Inventory from './components/Inventory';
+import Recipes from './components/Recipes';
+import Suppliers from './components/Suppliers';
+import RestaurantDetails from './components/RestaurantDetails';
 
 import LandingPage from './components/LandingPage';
 import Profile from './components/Profile';
@@ -23,7 +26,7 @@ const AppRoutes = () => {
 
   const getDefaultRoute = () => {
     if (!isAuthenticated) return '/';
-    if (user?.userType === 'RESTAURANT_OWNER') return '/dashboard';
+    if (user?.userType === 'RESTAURANT_OWNER') return '/restaurant-dashboard';
     if (user?.userType === 'CUSTOMER') return '/home';
     return '/';
   };
@@ -36,10 +39,42 @@ const AppRoutes = () => {
       <Route path="/login" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Login />} />
       <Route path="/signup" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Signup />} />
       <Route
-        path="/dashboard"
+        path="/restaurant-dashboard"
         element={
           <ProtectedRoute requiresOwner>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventory"
+        element={
+          <ProtectedRoute requiresOwner>
+            <Inventory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recipes"
+        element={
+          <ProtectedRoute requiresOwner>
+            <Recipes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/suppliers"
+        element={
+          <ProtectedRoute requiresOwner>
+            <Suppliers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant-details"
+        element={
+          <ProtectedRoute requiresOwner>
+            <RestaurantDetails />
           </ProtectedRoute>
         }
       />

@@ -1,254 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { restaurantService } from '../services/api';
-import RestaurantForm from './RestaurantForm';
+import React from "react";
+import Sidebar from './Sidebar';
+import { ShoppingBag, CreditCard, TrendingUp, User } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
-  const [restaurant, setRestaurant] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [message, setMessage] = useState(null);
-
-  useEffect(() => {
-    fetchRestaurant();
-  }, []);
-
-  const fetchRestaurant = async () => {
-    try {
-      setLoading(true);
-      if (user?.email) {
-        const restaurantData = await restaurantService.getMyRestaurant(user.email);
-        setRestaurant(restaurantData);
-      }
-    } catch (error) {
-      console.error('Failed to fetch restaurant:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRestaurantSubmit = async (restaurantData) => {
-    try {
-      setSaving(true);
-      let updatedRestaurant;
-
-      if (!user?.email) {
-        throw new Error('User email not found');
-      }
-
-      if (restaurant) {
-        updatedRestaurant = await restaurantService.updateRestaurant(restaurantData, user.email);
-        setMessage({ type: 'success', text: 'Restaurant details updated successfully!' });
-      } else {
-        try {
-          updatedRestaurant = await restaurantService.createRestaurant(restaurantData, user.email);
-          setMessage({ type: 'success', text: 'Restaurant details added successfully!' });
-        } catch (createErr) {
-          const msg = createErr.response?.data?.message || '';
-          const alreadyHasRestaurant = msg.toLowerCase().includes('already has a restaurant');
-          if (alreadyHasRestaurant) {
-            // If backend says restaurant exists, switch to update flow
-            updatedRestaurant = await restaurantService.updateRestaurant(restaurantData, user.email);
-            setMessage({ type: 'success', text: 'Restaurant exists; updated details instead.' });
-          } else {
-            throw createErr;
-          }
-        }
-      }
-
-      setRestaurant(updatedRestaurant);
-      
-      // Clear message after 5 seconds
-      setTimeout(() => setMessage(null), 5000);
-    } catch (error) {
-      console.error('Failed to save restaurant:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to save restaurant details. Please try again.' 
-      });
-      throw error; 
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Smart Kitchen Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                Welcome, {user?.name}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Logout
-              </button>
-            </div>
+    <div className="flex min-h-screen bg-[#f9f7f4]">
+      <Sidebar activeTab="dashboard" />
+      <main className="flex-1 px-10 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-4xl font-bold text-[#23190f]">Dashboard</h1>
+            <p className="text-gray-500 mt-1">Welcome back! Here's what's happening today.</p>
+          </div>
+          <div className="flex gap-2 bg-white rounded-xl shadow px-2 py-1">
+            <button className="bg-orange-500 text-white px-4 py-1 rounded-lg font-semibold">Today</button>
+            <button className="px-4 py-1 rounded-lg text-gray-600">This Week</button>
+            <button className="px-4 py-1 rounded-lg text-gray-600">This Month</button>
           </div>
         </div>
-      </nav>
 
-      {/* Message Banner */}
-      {message && (
-        <div className={`${
-          message.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
-        } border-l-4 p-4`}>
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm">{message.text}</p>
-            </div>
-            <div className="ml-auto pl-3">
-              <button
-                onClick={() => setMessage(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
+        {/* Low Stock Alert */}
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-red-600 font-bold">⚠ Low Stock Alert</span>
+            <span className="bg-white rounded-full px-3 py-1 text-sm text-gray-700">Ginger: 380g</span>
+            <span className="bg-white rounded-full px-3 py-1 text-sm text-gray-700">Cumin Seeds: 180g</span>
+          </div>
+          <span className="text-xs text-red-400">2 items</span>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="flex gap-6 mb-8">
+          <div className="bg-orange-500 text-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
+            <div className="text-lg font-semibold mb-2">Orders Today</div>
+            <div className="text-3xl font-bold mb-1">47</div>
+            <div className="text-sm">+12% from yesterday</div>
+            <span className="absolute top-6 right-6 bg-orange-100 rounded-xl p-2">
+              <ShoppingBag className="w-7 h-7 text-orange-600" />
+            </span>
+          </div>
+          <div className="bg-green-500 text-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
+            <div className="text-lg font-semibold mb-2">Revenue Today</div>
+            <div className="text-3xl font-bold mb-1">₹24,580</div>
+            <div className="text-sm">+8% from yesterday</div>
+            <span className="absolute top-6 right-6 bg-green-100 rounded-xl p-2">
+              <CreditCard className="w-7 h-7 text-green-600" />
+            </span>
+          </div>
+          <div className="bg-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
+            <div className="text-lg font-semibold mb-2">Avg Order Value</div>
+            <div className="text-3xl font-bold mb-1">₹523</div>
+            <div className="text-sm text-gray-600">+5% this week</div>
+            <span className="absolute top-6 right-6 bg-orange-100 rounded-xl p-2">
+              <TrendingUp className="w-7 h-7 text-orange-600" />
+            </span>
+          </div>
+          <div className="bg-white rounded-xl flex-1 p-6 shadow relative overflow-hidden">
+            <div className="text-lg font-semibold mb-2">Active Customers</div>
+            <div className="text-3xl font-bold mb-1 text-[#23190f]">128</div>
+            <div className="text-sm text-gray-600">32 new this week</div>
+            <span className="absolute top-6 right-6 bg-orange-100 rounded-xl p-2">
+              <User className="w-7 h-7 text-orange-600" />
+            </span>
           </div>
         </div>
-      )}
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Tabs */}
-          <div className="border-b border-gray-200 mb-6">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'overview'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('restaurant')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'restaurant'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Restaurant Details
-              </button>
-            </nav>
+        {/* Orders & Best Sellers */}
+        <div className="flex gap-8">
+          {/* Orders */}
+          <div className="flex-1">
+            <div className="font-bold text-xl mb-4">Orders</div>
+            <div className="flex gap-2 mb-4">
+              <button className="bg-orange-500 text-white px-4 py-1 rounded-lg font-semibold">All</button>
+              <button className="bg-white px-4 py-1 rounded-lg text-gray-600">Pending</button>
+              <button className="bg-white px-4 py-1 rounded-lg text-gray-600">Done</button>
+              <button className="bg-white px-4 py-1 rounded-lg text-gray-600">Cancel</button>
+            </div>
+            <input className="w-full mb-4 px-4 py-2 rounded-lg border border-gray-200" placeholder="Search by customer name or order ID..." />
+            <div className="bg-white rounded-xl p-4 mb-3 flex justify-between items-center shadow">
+              <div>
+                <div className="font-semibold">Rahul Sharma <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2">Pending</span></div>
+                <div className="text-sm text-gray-500">Order #1247 • 3 items</div>
+              </div>
+              <div className="font-bold text-lg">₹650</div>
+            </div>
+            {/* Add more orders as needed */}
           </div>
-
-          {/* Tab Content */}
-          {activeTab === 'overview' && (
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Welcome to Smart Kitchen!
-                </h2>
-                
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <p className="mt-2 text-gray-600">Loading...</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Owner Information */}
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">Owner Information</h3>
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <p><span className="font-medium">Owner Name:</span> {user?.name}</p>
-                        <p><span className="font-medium">Email:</span> {user?.email}</p>
-                        {user?.phone && (
-                          <p><span className="font-medium">Phone:</span> {user.phone}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Restaurant Information */}
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">Restaurant Information</h3>
-                      {restaurant ? (
-                        <div className="space-y-2 text-sm text-gray-600">
-                          <p><span className="font-medium">Name:</span> {restaurant.name}</p>
-                          <p><span className="font-medium">Cuisine:</span> {restaurant.cuisineType || 'Not specified'}</p>
-                          <p><span className="font-medium">Address:</span> {restaurant.address || 'Not specified'}</p>
-                          <p><span className="font-medium">Phone:</span> {restaurant.phone || 'Not specified'}</p>
-                          <p>
-                            <span className="font-medium">Status:</span> 
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                              restaurant.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {restaurant.isOpen ? 'Open' : 'Closed'}
-                            </span>
-                          </p>
-                          <p><span className="font-medium">Rating:</span> {restaurant.rating || 0} ⭐</p>
-                        </div>
-                      ) : (
-                        <div className="text-gray-500">
-                          <p>No restaurant details found.</p>
-                          <button
-                            onClick={() => setActiveTab('restaurant')}
-                            className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                          >
-                            Add your restaurant details →
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Quick Stats */}
-                {restaurant && (
-                  <div className="mt-8">
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">Quick Stats</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-gray-50 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-blue-600">{restaurant.rating || 0}</p>
-                        <p className="text-sm text-gray-600">Rating</p>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-green-600">
-                          {restaurant.isOpen ? 'Open' : 'Closed'}
-                        </p>
-                        <p className="text-sm text-gray-600">Status</p>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-purple-600">0</p>
-                        <p className="text-sm text-gray-600">Orders Today</p>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-orange-600">0</p>
-                        <p className="text-sm text-gray-600">Total Reviews</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+          {/* Best Sellers */}
+          <div className="w-96">
+            <button className="bg-orange-500 text-white w-full py-3 rounded-lg font-semibold mb-6">+ Add Item</button>
+            <div className="bg-white rounded-xl p-6 shadow">
+              <div className="font-bold text-lg mb-4">Weekly Best Sellers</div>
+              <div className="mb-3">
+                <div className="flex justify-between items-center">
+                  <div>1. Paneer Butter Masala</div>
+                  <div className="font-bold text-orange-600">156 sold <span className="text-green-500 text-xs ml-1">↑12%</span></div>
+                </div>
+                <div className="text-xs text-gray-500">₹46,800</div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center">
+                  <div>2. Veg Biryani</div>
+                  <div className="font-bold text-orange-600">142 sold <span className="text-green-500 text-xs ml-1">↑8%</span></div>
+                </div>
+                <div className="text-xs text-gray-500">₹42,600</div>
               </div>
             </div>
-          )}
-
-          {activeTab === 'restaurant' && (
-            <RestaurantForm
-              restaurant={restaurant || undefined}
-              onSubmit={handleRestaurantSubmit}
-              isLoading={saving}
-            />
-          )}
+          </div>
         </div>
       </main>
     </div>

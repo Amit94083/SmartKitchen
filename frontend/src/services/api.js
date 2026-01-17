@@ -1,3 +1,18 @@
+// Ingredient Service
+export const ingredientService = {
+  getAllIngredients: async () => {
+    const response = await api.get('/ingredients');
+    return response.data;
+  },
+  createIngredient: async (ingredientData) => {
+    const response = await api.post('/ingredients', ingredientData);
+    return response.data;
+  },
+  updateIngredient: async (id, ingredientData) => {
+    const response = await api.put(`/ingredients/${id}`, ingredientData);
+    return response.data;
+  },
+};
 export const orderService = {
   placeOrder: async (orderData) => {
     const response = await api.post('/orders', orderData);
