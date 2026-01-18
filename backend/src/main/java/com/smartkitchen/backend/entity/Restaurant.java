@@ -53,6 +53,18 @@ public class Restaurant {
     
     @Column(name = "last_modified_at")
     private LocalDateTime lastModifiedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        lastModifiedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastModifiedAt = LocalDateTime.now();
+    }
     
     // Default constructor
     public Restaurant() {}

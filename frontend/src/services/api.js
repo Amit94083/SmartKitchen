@@ -5,6 +5,50 @@ export const analyticsService = {
     return response.data;
   },
 };
+
+// Recipe Service
+export const recipeService = {
+  getAllRecipes: async () => {
+    const response = await api.get('/recipes');
+    return response.data;
+  },
+  getRecipesByMenuItem: async (menuItemId) => {
+    const response = await api.get(`/recipes/menu-item/${menuItemId}`);
+    return response.data;
+  },
+  createRecipe: async (recipeData) => {
+    const response = await api.post('/recipes', recipeData);
+    return response.data;
+  },
+  createBatchRecipes: async (batchData) => {
+    const response = await api.post('/recipes/batch', batchData);
+    return response.data;
+  },
+  deleteRecipe: async (id) => {
+    const response = await api.delete(`/recipes/${id}`);
+    return response.data;
+  },
+  deleteRecipesByMenuItem: async (menuItemId) => {
+    const response = await api.delete(`/recipes/menu-item/${menuItemId}`);
+    return response.data;
+  },
+};
+
+// Menu Service
+export const menuService = {
+  getAllMenuItems: async () => {
+    const response = await api.get('/menu');
+    return response.data;
+  },
+  createMenuItem: async (menuItemData) => {
+    const response = await api.post('/menu', menuItemData);
+    return response.data;
+  },
+  updateMenuItem: async (id, menuItemData) => {
+    const response = await api.put(`/menu/${id}`, menuItemData);
+    return response.data;
+  },
+};
 // Ingredient Service
 export const ingredientService = {
   getAllIngredients: async () => {

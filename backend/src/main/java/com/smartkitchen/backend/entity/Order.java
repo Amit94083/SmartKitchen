@@ -5,6 +5,17 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "orders")
 public class Order {
+            @PrePersist
+            protected void onCreate() {
+                LocalDateTime now = LocalDateTime.now();
+                createdAt = now;
+                lastModifiedAt = now;
+            }
+
+            @PreUpdate
+            protected void onUpdate() {
+                lastModifiedAt = LocalDateTime.now();
+            }
         @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
         private java.util.List<OrderItem> orderItems = new java.util.ArrayList<>();
 

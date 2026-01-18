@@ -13,6 +13,17 @@ import java.time.LocalDateTime;
 @Table(name = "menu_items")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class MenuItem {
+        @PrePersist
+        protected void onCreate() {
+            LocalDateTime now = LocalDateTime.now();
+            createdAt = now;
+            lastModifiedAt = now;
+        }
+
+        @PreUpdate
+        protected void onUpdate() {
+            lastModifiedAt = LocalDateTime.now();
+        }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long itemId;
@@ -31,15 +42,6 @@ public class MenuItem {
     private LocalDateTime createdAt;
     private LocalDateTime lastModifiedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        lastModifiedAt = LocalDateTime.now();
-    }
 
     public MenuItem() {}
 

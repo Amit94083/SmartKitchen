@@ -1,10 +1,12 @@
 package com.smartkitchen.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ingredients")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Ingredient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +35,18 @@ public class Ingredient {
 
     @Column(name = "last_modified_at")
     private LocalDateTime lastModifiedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        lastModifiedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastModifiedAt = LocalDateTime.now();
+    }
 
     // Getters and setters
     public Long getIngredientId() { return ingredientId; }
