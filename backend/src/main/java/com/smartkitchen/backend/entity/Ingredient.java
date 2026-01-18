@@ -31,8 +31,8 @@ public class Ingredient {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column
-    private LocalDateTime lastModify;
+    @Column(name = "last_modified_at")
+    private LocalDateTime lastModifiedAt;
 
     // Getters and setters
     public Long getIngredientId() { return ingredientId; }
@@ -59,6 +59,6 @@ public class Ingredient {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getLastModify() { return lastModify; }
-    public void setLastModify(LocalDateTime lastModify) { this.lastModify = lastModify; }
+    public LocalDateTime getLastModifiedAt() { return lastModifiedAt; }
+    public void setLastModifiedAt(LocalDateTime lastModifiedAt) { this.lastModifiedAt = lastModifiedAt; }
 }

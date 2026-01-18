@@ -48,9 +48,11 @@ public class Restaurant {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
     
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    
+    @Column(name = "last_modified_at")
+    private LocalDateTime lastModifiedAt;
     
     // Default constructor
     public Restaurant() {}
@@ -137,5 +139,13 @@ public class Restaurant {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastModifiedAt() {
+        return lastModifiedAt;
+    }
+    
+    public void setLastModifiedAt(LocalDateTime lastModifiedAt) {
+        this.lastModifiedAt = lastModifiedAt;
     }
 }

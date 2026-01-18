@@ -1,6 +1,7 @@
 package com.smartkitchen.backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_items")
@@ -22,6 +23,12 @@ public class OrderItem {
     @Column(name = "price", nullable = false)
     private Double price;
 
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "last_modified_at")
+    private LocalDateTime lastModifiedAt;
+
     public OrderItem() {}
 
     public Long getId() { return id; }
@@ -38,4 +45,10 @@ public class OrderItem {
 
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getLastModifiedAt() { return lastModifiedAt; }
+    public void setLastModifiedAt(LocalDateTime lastModifiedAt) { this.lastModifiedAt = lastModifiedAt; }
 }

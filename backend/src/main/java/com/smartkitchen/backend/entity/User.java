@@ -63,13 +63,11 @@ public class User {
     @Column(name = "address_instructions")
     private String addressInstructions;
     
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @CreationTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    @Column(name = "last_modified_at")
+    private LocalDateTime lastModifiedAt;
     
     // Enum for user types
     public enum UserType {
@@ -187,12 +185,12 @@ public class User {
         this.createdAt = createdAt;
     }
     
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDateTime getLastModifiedAt() {
+        return lastModifiedAt;
     }
     
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setLastModifiedAt(LocalDateTime lastModifiedAt) {
+        this.lastModifiedAt = lastModifiedAt;
     }
     
     // Helper methods

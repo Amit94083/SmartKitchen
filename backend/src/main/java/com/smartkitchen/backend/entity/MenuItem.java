@@ -29,10 +29,16 @@ public class MenuItem {
     private Boolean isAvailable;
     private Long createdByOwnerId;
     private LocalDateTime createdAt;
+    private LocalDateTime lastModifiedAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastModifiedAt = LocalDateTime.now();
     }
 
     public MenuItem() {}
@@ -90,4 +96,7 @@ public class MenuItem {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getLastModifiedAt() { return lastModifiedAt; }
+    public void setLastModifiedAt(LocalDateTime lastModifiedAt) { this.lastModifiedAt = lastModifiedAt; }
 }

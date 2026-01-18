@@ -38,7 +38,7 @@ public class IngredientController {
                 existing.setCurrentQuantity(ingredient.getCurrentQuantity());
                 existing.setThresholdQuantity(ingredient.getThresholdQuantity());
                 existing.setIsActive(ingredient.getIsActive());
-                existing.setLastModify(LocalDateTime.now());
+                existing.setLastModifiedAt(LocalDateTime.now());
                 Ingredient updated = ingredientRepository.save(existing);
                 return ResponseEntity.ok(updated);
             })
