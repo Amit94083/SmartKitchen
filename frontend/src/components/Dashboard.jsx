@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { ingredientService, analyticsService, orderService } from '../services/api';
+import { ingredientService, analyticsService, orderService, menuService } from '../services/api';
 import Sidebar from './Sidebar';
-import { ShoppingBag, CreditCard, TrendingUp, User, Search } from 'lucide-react';
+import { ShoppingBag, CreditCard, TrendingUp, User, Search, X, Upload } from 'lucide-react';
 
 const Dashboard = () => {
 
@@ -11,6 +11,22 @@ const Dashboard = () => {
   const [orderFilter, setOrderFilter] = useState('All');
   const [orderSearch, setOrderSearch] = useState('');
   const [period, setPeriod] = useState('Today');
+  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [newMenuItem, setNewMenuItem] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    isVeg: true,
+    prepTimeX: '',
+    packTimeY: '',
+    deliveryTimeZ: '',
+    imageUrl: '',
+    isAvailable: true,
+  });
 
   useEffect(() => {
     const fetchIngredients = async () => {
@@ -39,9 +55,20 @@ const Dashboard = () => {
         setOrders([]);
       }
     };
+    const fetchCategories = async () => {
+      try {
+        const menuItems = await menuService.getAllMenuItems();
+        // Extract unique categories from menu items
+        const uniqueCategories = [...new Set(menuItems.map(item => item.category).filter(cat => cat))];
+        setCategories(uniqueCategories.sort());
+      } catch (err) {
+        setCategories([]);
+      }
+    };
     fetchIngredients();
     fetchBestSellers();
     fetchOrders();
+    fetchCategories();
   }, []);
 
   // Calculate period boundaries
@@ -109,6 +136,55 @@ const Dashboard = () => {
       }).map(o => o.customerName || o.userId || '')
     )).length;
   }
+
+  const handleAddMenuItem = async (e) => {
+    e.preventDefault();
+    try {
+      const ownerId = localStorage.getItem('userId') || 1; // Get owner ID from auth context
+      const finalCategory = showCustomCategory ? customCategory : newMenuItem.category;
+      const menuItemData = {
+        ...newMenuItem,
+        category: finalCategory,
+        price: parseFloat(newMenuItem.price),
+        prepTimeX: parseInt(newMenuItem.prepTimeX) || 0,
+        packTimeY: parseInt(newMenuItem.packTimeY) || 0,
+        deliveryTimeZ: parseInt(newMenuItem.deliveryTimeZ) || 0,
+        createdByOwnerId: ownerId,
+      };
+      await menuService.createMenuItem(menuItemData);
+      alert('Menu item added successfully!');
+      setShowAddItemDialog(false);
+      setShowCustomCategory(false);
+      setCustomCategory('');
+      setNewMenuItem({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        isVeg: true,
+        prepTimeX: '',
+        packTimeY: '',
+        deliveryTimeZ: '',
+        imageUrl: '',
+        isAvailable: true,
+      });
+    } catch (error) {
+      console.error('Error adding menu item:', error);
+      alert('Failed to add menu item. Please try again.');
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // For now, we'll use a placeholder. In production, upload to cloud storage
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewMenuItem({ ...newMenuItem, imageUrl: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f9f7f4]">
@@ -263,7 +339,12 @@ const Dashboard = () => {
           </div>
           {/* Best Sellers */}
           <div className="w-96">
-            <button className="bg-orange-500 text-white w-full py-3 rounded-lg font-semibold mb-6">+ Add Item</button>
+            <button 
+              className="bg-orange-500 text-white w-full py-3 rounded-lg font-semibold mb-6 hover:bg-orange-600 transition"
+              onClick={() => setShowAddItemDialog(true)}
+            >
+              + Add Item
+            </button>
             <div className="bg-white rounded-xl p-6 shadow">
               <div className="font-bold text-lg mb-4">Weekly Best Sellers</div>
               {bestSellers.length === 0 ? (
@@ -282,6 +363,228 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Add Menu Item Dialog */}
+        {showAddItemDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-800">Add New Menu Item</h2>
+                <button 
+                  onClick={() => setShowAddItemDialog(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddMenuItem} className="p-6 space-y-5">
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Food Image
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-400 transition">
+                    {newMenuItem.imageUrl ? (
+                      <div className="relative">
+                        <img 
+                          src={newMenuItem.imageUrl} 
+                          alt="Preview" 
+                          className="max-h-40 mx-auto rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setNewMenuItem({ ...newMenuItem, imageUrl: '' })}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                        <p className="text-gray-500">Click to upload image</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Food Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newMenuItem.name}
+                    onChange={(e) => setNewMenuItem({ ...newMenuItem, name: e.target.value })}
+                    placeholder="e.g., Paneer Butter Masala"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description / Ingredients <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required
+                    value={newMenuItem.description}
+                    onChange={(e) => setNewMenuItem({ ...newMenuItem, description: e.target.value })}
+                    placeholder="e.g., Paneer 250g, Butter 50g, Cream 100ml, Tomatoes 200g"
+                    rows="3"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Category and Price */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      required={!showCustomCategory}
+                      value={showCustomCategory ? 'custom' : newMenuItem.category}
+                      onChange={(e) => {
+                        if (e.target.value === 'custom') {
+                          setShowCustomCategory(true);
+                          setNewMenuItem({ ...newMenuItem, category: '' });
+                        } else {
+                          setShowCustomCategory(false);
+                          setCustomCategory('');
+                          setNewMenuItem({ ...newMenuItem, category: e.target.value });
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="custom">+ Add New Category</option>
+                    </select>
+                    {showCustomCategory && (
+                      <input
+                        type="text"
+                        required
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        placeholder="Enter new category name"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent mt-2"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Price (₹) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={newMenuItem.price}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, price: e.target.value })}
+                      placeholder="e.g., 300"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Time Fields */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Prep Time (min)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newMenuItem.prepTimeX}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, prepTimeX: e.target.value })}
+                      placeholder="15"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Pack Time (min)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newMenuItem.packTimeY}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, packTimeY: e.target.value })}
+                      placeholder="5"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Delivery Time (min)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newMenuItem.deliveryTimeZ}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, deliveryTimeZ: e.target.value })}
+                      placeholder="20"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Checkboxes */}
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newMenuItem.isVeg}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, isVeg: e.target.checked })}
+                      className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Vegetarian</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newMenuItem.isAvailable}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, isAvailable: e.target.checked })}
+                      className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Available</span>
+                  </label>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddItemDialog(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
+                  >
+                    Add Item
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
