@@ -279,40 +279,46 @@ const Recipes = () => {
               <p className="text-gray-400">Click "Add Recipe" to create your first recipe</p>
             </div>
           ) : (
-            recipes.map((recipe) => (
-              <div key={recipe.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{recipe.name}</h3>
-                    <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded">
-                      {recipe.category}
-                    </span>
+            [...recipes]
+              .sort((a, b) => {
+                if (a.category < b.category) return -1;
+                if (a.category > b.category) return 1;
+                return a.name.localeCompare(b.name);
+              })
+              .map((recipe) => (
+                <div key={recipe.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{recipe.name}</h3>
+                      <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded">
+                        {recipe.category}
+                      </span>
+                    </div>
+                    <button className="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg transition-colors">
+                      <BookOpen size={20} />
+                    </button>
                   </div>
-                  <button className="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg transition-colors">
-                    <BookOpen size={20} />
+
+                  {recipe.description && (
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{recipe.description}</p>
+                  )}
+
+                  <div className="mb-4 text-gray-600 text-sm">
+                    {recipe.hasRecipe ? (
+                      <p className="font-semibold text-green-600">{recipe.ingredients.length} ingredients defined</p>
+                    ) : (
+                      <p className="font-semibold text-amber-600">No ingredients defined yet</p>
+                    )}
+                  </div>
+
+                  <button 
+                    onClick={() => recipe.hasRecipe ? setSelectedRecipe(recipe) : setShowAddModal(true)}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                  >
+                    {recipe.hasRecipe ? 'View Ingredients' : 'Add Recipe'}
                   </button>
                 </div>
-
-                {recipe.description && (
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{recipe.description}</p>
-                )}
-
-                <div className="mb-4 text-gray-600 text-sm">
-                  {recipe.hasRecipe ? (
-                    <p className="font-semibold text-green-600">{recipe.ingredients.length} ingredients defined</p>
-                  ) : (
-                    <p className="font-semibold text-amber-600">No ingredients defined yet</p>
-                  )}
-                </div>
-
-                <button 
-                  onClick={() => recipe.hasRecipe ? setSelectedRecipe(recipe) : setShowAddModal(true)}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-                >
-                  {recipe.hasRecipe ? 'View Ingredients' : 'Add Recipe'}
-                </button>
-              </div>
-            ))
+              ))
           )}
         </div>
 

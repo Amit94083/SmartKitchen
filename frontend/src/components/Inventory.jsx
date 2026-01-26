@@ -4,6 +4,7 @@ import { ingredientService } from '../services/api';
 import { Search, Filter, Plus, X, Package, AlertCircle, TrendingUp, Droplet } from 'lucide-react';
 
 const Inventory = () => {
+    const [formError, setFormError] = useState('');
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,12 +18,18 @@ const Inventory = () => {
     ingredientType: '',
     unit: '',
     currentQuantity: '',
+    maxQuantity: '',
     thresholdQuantity: '',
     isActive: true
   });
 
-  // Get unique ingredient types for filter buttons
-  const ingredientTypes = Array.from(new Set(ingredients.map(i => i.ingredientType))).filter(Boolean);
+  // Get unique ingredient types for filter buttons, sorted alphabetically, 'Other' last
+  let ingredientTypes = Array.from(new Set(ingredients.map(i => i.ingredientType))).filter(Boolean);
+  ingredientTypes = ingredientTypes.sort((a, b) => {
+    if (a === 'Other') return 1;
+    if (b === 'Other') return -1;
+    return a.localeCompare(b);
+  });
 
   useEffect(() => {
     ingredientService.getAllIngredients()
@@ -36,18 +43,36 @@ const Inventory = () => {
       });
   }, []);
 
-  // Stock status logic
+  // Stock status logic based on percentage
   const getStockStatus = (ingredient) => {
-    if (ingredient.currentQuantity <= ingredient.thresholdQuantity) return { label: 'Low Stock', color: 'bg-red-100 text-red-700', bar: 'bg-red-500' };
-    if (ingredient.currentQuantity <= ingredient.thresholdQuantity * 2) return { label: 'Medium', color: 'bg-yellow-100 text-yellow-700', bar: 'bg-yellow-500' };
+    const percent = ingredient.maxQuantity && !isNaN(ingredient.maxQuantity)
+      ? (ingredient.currentQuantity / ingredient.maxQuantity) * 100
+      : 0;
+    if (percent <= 25) return { label: 'Low Stock', color: 'bg-red-100 text-red-700', bar: 'bg-red-500' };
+    if (percent > 25 && percent <= 75) return { label: 'Medium', color: 'bg-yellow-100 text-yellow-700', bar: 'bg-yellow-500' };
     return { label: 'In Stock', color: 'bg-green-100 text-green-700', bar: 'bg-green-500' };
   };
 
-  // Summary stats
+  // Summary stats using percentage-based logic
   const totalItems = ingredients.length;
-  const inStock = ingredients.filter(i => i.currentQuantity > i.thresholdQuantity * 2).length;
-  const mediumStock = ingredients.filter(i => i.currentQuantity > i.thresholdQuantity && i.currentQuantity <= i.thresholdQuantity * 2).length;
-  const lowStock = ingredients.filter(i => i.currentQuantity <= i.thresholdQuantity).length;
+  const inStock = ingredients.filter(i => {
+    const percent = i.maxQuantity && !isNaN(i.maxQuantity)
+      ? (i.currentQuantity / i.maxQuantity) * 100
+      : 0;
+    return percent > 75;
+  }).length;
+  const mediumStock = ingredients.filter(i => {
+    const percent = i.maxQuantity && !isNaN(i.maxQuantity)
+      ? (i.currentQuantity / i.maxQuantity) * 100
+      : 0;
+    return percent > 25 && percent <= 75;
+  }).length;
+  const lowStock = ingredients.filter(i => {
+    const percent = i.maxQuantity && !isNaN(i.maxQuantity)
+      ? (i.currentQuantity / i.maxQuantity) * 100
+      : 0;
+    return percent <= 25;
+  }).length;
 
   const handleOpenModal = (tab = 'add', ingredient = null) => {
     setModalTab(tab);
@@ -58,18 +83,22 @@ const Inventory = () => {
         ingredientType: ingredient.ingredientType,
         unit: ingredient.unit,
         currentQuantity: ingredient.currentQuantity,
+        maxQuantity: ingredient.maxQuantity || '',
         thresholdQuantity: ingredient.thresholdQuantity,
         isActive: ingredient.isActive
       });
+      setFormError('');
     } else {
       setFormData({
         name: '',
         ingredientType: '',
         unit: '',
         currentQuantity: '',
+        maxQuantity: '',
         thresholdQuantity: '',
         isActive: true
       });
+      setFormError('');
     }
     setShowModal(true);
   };
@@ -82,28 +111,70 @@ const Inventory = () => {
       ingredientType: '',
       unit: '',
       currentQuantity: '',
+      maxQuantity: '',
       thresholdQuantity: '',
       isActive: true
     });
+    setFormError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Normalize ingredientType
+      const normalizedType = formData.ingredientType
+        ? formData.ingredientType.charAt(0).toUpperCase() + formData.ingredientType.slice(1).toLowerCase()
+        : '';
+
+      // Normalize ingredient name: each word capitalized, rest lowercase
+      const normalizedName = formData.name
+        .split(' ')
+        .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '')
+        .join(' ');
+
       if (modalTab === 'add') {
-        await ingredientService.createIngredient(formData);
+        const maxQ = formData.maxQuantity !== '' && !isNaN(formData.maxQuantity)
+          ? Number(formData.maxQuantity)
+          : 0;
+        const currentQ = formData.currentQuantity !== '' && !isNaN(formData.currentQuantity)
+          ? Number(formData.currentQuantity)
+          : 0;
+        if (currentQ > maxQ) {
+          setFormError('Current quantity cannot exceed max quantity.');
+          return;
+        } else {
+          setFormError('');
+        }
+        await ingredientService.createIngredient({ ...formData, name: normalizedName, ingredientType: normalizedType });
       } else {
         // Only update the field if the user entered a value
+        const maxQ = formData.maxQuantity !== '' && !isNaN(formData.maxQuantity)
+          ? Number(formData.maxQuantity)
+          : selectedIngredient.maxQuantity;
+        const addQ = formData.currentQuantity !== '' && !isNaN(formData.currentQuantity)
+          ? Number(formData.currentQuantity)
+          : 0;
+        const newCurrent = formData.currentQuantity !== '' && !isNaN(formData.currentQuantity)
+          ? Number(selectedIngredient.currentQuantity) + Number(formData.currentQuantity)
+          : selectedIngredient.currentQuantity;
+        if (addQ > maxQ) {
+          setFormError('Add to Current Quantity cannot be more than Update Max Quantity.');
+          return;
+        } else if (newCurrent > maxQ) {
+          setFormError('Resulting current quantity cannot exceed max quantity.');
+          return;
+        } else {
+          setFormError('');
+        }
         const updatedData = {
           ...formData,
-          currentQuantity:
-            formData.currentQuantity !== '' && !isNaN(formData.currentQuantity)
-              ? Number(selectedIngredient.currentQuantity) + Number(formData.currentQuantity)
-              : selectedIngredient.currentQuantity,
+          ingredientType: normalizedType,
+          currentQuantity: newCurrent,
           thresholdQuantity:
             formData.thresholdQuantity !== '' && !isNaN(formData.thresholdQuantity) && Number(formData.thresholdQuantity) > 0
               ? Number(formData.thresholdQuantity)
               : selectedIngredient.thresholdQuantity,
+          maxQuantity: maxQ,
         };
         // If the user left the field blank, don't send it in the update
         if (formData.currentQuantity === '' || isNaN(formData.currentQuantity)) {
@@ -111,6 +182,9 @@ const Inventory = () => {
         }
         if (formData.thresholdQuantity === '' || isNaN(formData.thresholdQuantity)) {
           delete updatedData.thresholdQuantity;
+        }
+        if (formData.maxQuantity === '' || isNaN(formData.maxQuantity)) {
+          delete updatedData.maxQuantity;
         }
         await ingredientService.updateIngredient(selectedIngredient.ingredientId, updatedData);
       }
@@ -120,12 +194,13 @@ const Inventory = () => {
       setFormData(formData => ({
         ...formData,
         currentQuantity: '',
+        maxQuantity: '',
         thresholdQuantity: ''
       }));
       handleCloseModal();
     } catch (err) {
       console.error('Failed to save ingredient', err);
-      alert('Failed to save ingredient');
+      setFormError('Failed to save ingredient');
     }
   };
 
@@ -206,9 +281,12 @@ const Inventory = () => {
                 (filter === 'All' || ingredient.ingredientType === filter) &&
                 (search.trim() === '' || ingredient.name.toLowerCase().includes(search.trim().toLowerCase()))
               )
+              .sort((a, b) => a.name.localeCompare(b.name))
               .map(ingredient => {
                 const status = getStockStatus(ingredient);
-                const percent = Math.min(100, Math.round((ingredient.currentQuantity / (ingredient.thresholdQuantity * 2)) * 100));
+                const percent = ingredient.maxQuantity && !isNaN(ingredient.maxQuantity)
+                  ? Math.min(100, Math.round((ingredient.currentQuantity / ingredient.maxQuantity) * 100))
+                  : 0;
                 return (
                   <div key={ingredient.ingredientId} className="bg-white rounded-xl p-6 shadow">
                     <div className="flex justify-between items-center mb-2">
@@ -281,7 +359,7 @@ const Inventory = () => {
               <form onSubmit={handleSubmit} className="p-8">
                 {modalTab === 'update' && (
                   <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200">
-                    <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <label className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 text-orange-600" />
                       Select Ingredient to Update
                     </label>
@@ -322,10 +400,18 @@ const Inventory = () => {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Show error for update tab */}
+                  {modalTab === 'update' && formError && (
+                    <div className="md:col-span-2 text-red-600 font-semibold mb-2">{formError}</div>
+                  )}
+                  {/* Show error for add tab */}
+                  {modalTab === 'add' && formError && (
+                    <div className="md:col-span-2 text-red-600 font-semibold mb-2">{formError}</div>
+                  )}
                   {modalTab === 'add' && (
                     <>
                       <div className="space-y-2">
-                        <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
                           <Package className="w-4 h-4 text-orange-600" />
                           Name
                         </label>
@@ -339,7 +425,7 @@ const Inventory = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
                           <Filter className="w-4 h-4 text-orange-600" />
                           Ingredient Type
                         </label>
@@ -353,7 +439,7 @@ const Inventory = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
                           <Droplet className="w-4 h-4 text-orange-600" />
                           Unit
                         </label>
@@ -366,10 +452,49 @@ const Inventory = () => {
                           required
                         />
                       </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-orange-600" />
+                          Max Quantity
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
+                          value={formData.maxQuantity}
+                          onChange={(e) => setFormData({...formData, maxQuantity: e.target.value})}
+                          placeholder="e.g., 10000"
+                          required
+                        />
+                      </div>
                     </>
                   )}
+                  {modalTab === 'update' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-orange-600" />
+                        Update Max Quantity
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
+                          value={formData.maxQuantity}
+                          onChange={(e) => setFormData({...formData, maxQuantity: e.target.value})}
+                          placeholder={selectedIngredient ? `Current: ${selectedIngredient.maxQuantity}` : 'Enter max quantity'}
+                        />
+                        {selectedIngredient && (
+                          <div className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Current max: {selectedIngredient.maxQuantity} {selectedIngredient.unit}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-orange-600" />
                       {modalTab === 'update' ? 'Add to Current Quantity' : 'Current Quantity'}
                     </label>
@@ -392,7 +517,7 @@ const Inventory = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 text-orange-600" />
                       {modalTab === 'update' ? 'Update Threshold Quantity' : 'Threshold Quantity'}
                     </label>

@@ -32,8 +32,13 @@ const Dashboard = () => {
     const fetchIngredients = async () => {
       try {
         const data = await ingredientService.getAllIngredients();
-        // Low stock: currentQuantity <= thresholdQuantity
-        const lowStock = data.filter(i => i.currentQuantity <= i.thresholdQuantity);
+        // Low stock: percent <= 25
+        const lowStock = data.filter(i => {
+          const percent = i.maxQuantity && !isNaN(i.maxQuantity)
+            ? (i.currentQuantity / i.maxQuantity) * 100
+            : 0;
+          return percent <= 25;
+        });
         setLowStockIngredients(lowStock);
       } catch (err) {
         setLowStockIngredients([]);
@@ -213,20 +218,26 @@ const Dashboard = () => {
         </div>
 
         {/* Low Stock Alert */}
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-red-600 font-bold">⚠ Low Stock Alert</span>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start flex-wrap gap-4">
+          <div className="flex flex-col items-start min-w-[120px] mr-4">
+            <span className="text-red-600 font-bold flex items-center gap-1">
+              <span style={{fontSize: '1.2em'}}>⚠</span> Low<br/>Stock<br/>Alert
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 flex-1 items-center">
             {lowStockIngredients.length === 0 ? (
               <span className="bg-white rounded-full px-3 py-1 text-sm text-gray-700">No low stock items</span>
             ) : (
               lowStockIngredients.map(ing => (
-                <span key={ing.ingredientId} className="bg-white rounded-full px-3 py-1 text-sm text-gray-700">
-                  {ing.name}: {ing.currentQuantity}{ing.unit ? ing.unit : ''}
+                <span key={ing.ingredientId} className="bg-white rounded-full px-3 py-1 text-xs text-gray-700 shadow-sm border border-gray-200">
+                  <span className="font-semibold">{ing.name}</span>: {ing.currentQuantity}{ing.unit ? ing.unit : ''}
                 </span>
               ))
             )}
           </div>
-          <span className="text-xs text-red-400">{lowStockIngredients.length} item{lowStockIngredients.length !== 1 ? 's' : ''}</span>
+          <div className="flex flex-col items-end min-w-[60px]">
+            <span className="text-xs text-red-400">{lowStockIngredients.length} item{lowStockIngredients.length !== 1 ? 's' : ''}</span>
+          </div>
         </div>
 
         {/* Summary Cards */}

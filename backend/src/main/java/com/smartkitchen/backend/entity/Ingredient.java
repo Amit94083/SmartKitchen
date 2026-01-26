@@ -25,6 +25,9 @@ public class Ingredient {
     private Double currentQuantity;
 
     @Column(nullable = false)
+    private Double maxQuantity;
+
+    @Column(nullable = false)
     private Double thresholdQuantity;
 
     @Column(nullable = false)
@@ -63,6 +66,9 @@ public class Ingredient {
 
     public Double getCurrentQuantity() { return currentQuantity; }
     public void setCurrentQuantity(Double currentQuantity) { this.currentQuantity = currentQuantity; }
+
+    public Double getMaxQuantity() { return maxQuantity; }
+    public void setMaxQuantity(Double maxQuantity) { this.maxQuantity = maxQuantity; }
 
     public Double getThresholdQuantity() { return thresholdQuantity; }
     public void setThresholdQuantity(Double thresholdQuantity) { this.thresholdQuantity = thresholdQuantity; }
