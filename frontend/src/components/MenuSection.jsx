@@ -16,14 +16,18 @@ export default function MenuSection({ searchQuery, activeCategory, setActiveCate
       });
   }, []);
 
-  const filteredItems = foodItems.filter((item) => {
-    const matchesCategory =
-      activeCategory === "All" || item.category === activeCategory;
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+
+  // Filter and sort items (default: by name ascending)
+  const filteredItems = foodItems
+    .filter((item) => {
+      const matchesCategory =
+        activeCategory === "All" || item.category === activeCategory;
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   if (loading) return <div>Loading menu...</div>;
 

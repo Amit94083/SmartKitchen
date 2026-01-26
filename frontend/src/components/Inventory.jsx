@@ -275,37 +275,47 @@ const Inventory = () => {
         ) : error ? (
           <div className="text-center text-red-500 py-10">{error}</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ingredients
-              .filter(ingredient =>
-                (filter === 'All' || ingredient.ingredientType === filter) &&
-                (search.trim() === '' || ingredient.name.toLowerCase().includes(search.trim().toLowerCase()))
-              )
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map(ingredient => {
-                const status = getStockStatus(ingredient);
-                const percent = ingredient.maxQuantity && !isNaN(ingredient.maxQuantity)
-                  ? Math.min(100, Math.round((ingredient.currentQuantity / ingredient.maxQuantity) * 100))
-                  : 0;
-                return (
-                  <div key={ingredient.ingredientId} className="bg-white rounded-xl p-6 shadow">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="text-xs text-gray-500 font-bold">{ingredient.ingredientType?.toUpperCase()}</div>
-                      <span className={`${status.color} text-xs px-2 py-1 rounded-full`}>{status.label}</span>
+          (() => {
+            // Sort by category (ingredientType) alphabetically, then by name
+            const filtered = ingredients.filter(ingredient =>
+              (filter === 'All' || ingredient.ingredientType === filter) &&
+              (search.trim() === '' || ingredient.name.toLowerCase().includes(search.trim().toLowerCase()))
+            );
+            const sorted = filtered.slice().sort((a, b) => {
+              const typeA = (a.ingredientType || 'Other').toLowerCase();
+              const typeB = (b.ingredientType || 'Other').toLowerCase();
+              if (typeA < typeB) return -1;
+              if (typeA > typeB) return 1;
+              return a.name.localeCompare(b.name);
+            });
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sorted.map(ingredient => {
+                  const status = getStockStatus(ingredient);
+                  const percent = ingredient.maxQuantity && !isNaN(ingredient.maxQuantity)
+                    ? Math.min(100, Math.round((ingredient.currentQuantity / ingredient.maxQuantity) * 100))
+                    : 0;
+                  return (
+                    <div key={ingredient.ingredientId} className="bg-white rounded-xl p-6 shadow">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-xs text-gray-500 font-bold">{ingredient.ingredientType?.toUpperCase()}</div>
+                        <span className={`${status.color} text-xs px-2 py-1 rounded-full`}>{status.label}</span>
+                      </div>
+                      <div className="font-bold text-lg mb-1">{ingredient.name}</div>
+                      <div className="text-2xl font-bold mb-1">{ingredient.currentQuantity} <span className="text-sm font-normal">{ingredient.unit}</span></div>
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-xs text-gray-500">Stock Level</div>
+                        <div className="text-xs text-gray-500 font-semibold">{percent}%</div>
+                      </div>
+                      <div className="w-full h-2 bg-gray-200 rounded-full">
+                        <div className={`h-2 ${status.bar} rounded-full`} style={{width: `${percent}%`}}></div>
+                      </div>
                     </div>
-                    <div className="font-bold text-lg mb-1">{ingredient.name}</div>
-                    <div className="text-2xl font-bold mb-1">{ingredient.currentQuantity} <span className="text-sm font-normal">{ingredient.unit}</span></div>
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="text-xs text-gray-500">Stock Level</div>
-                      <div className="text-xs text-gray-500 font-semibold">{percent}%</div>
-                    </div>
-                    <div className="w-full h-2 bg-gray-200 rounded-full">
-                      <div className={`h-2 ${status.bar} rounded-full`} style={{width: `${percent}%`}}></div>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+                  );
+                })}
+              </div>
+            );
+          })()
         )}
 
         {/* Modal for Add/Update Ingredients */}
