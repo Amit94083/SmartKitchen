@@ -1,4 +1,5 @@
 import Orders from './components/Orders';
+import Ownerorders from './components/Ownerorders';
 import Cart from './components/Cart';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -78,6 +79,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute requiresOwner>
+            <Ownerorders />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Customer */}
       <Route path="/customer/login" element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <CustomerLogin />} />
@@ -109,19 +118,10 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/orders"
+        path="/customer/orders"
         element={
           <ProtectedRoute requiresCustomer>
             <Orders />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/cart"
-        element={
-          <ProtectedRoute requiresCustomer>
-            <Cart />
           </ProtectedRoute>
         }
       />

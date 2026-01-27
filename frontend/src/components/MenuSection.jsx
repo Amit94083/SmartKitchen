@@ -18,6 +18,7 @@ export default function MenuSection({ searchQuery, activeCategory, setActiveCate
 
 
   // Filter and sort items (default: by name ascending)
+  // Sort by category (alphabetically), then by name
   const filteredItems = foodItems
     .filter((item) => {
       const matchesCategory =
@@ -27,7 +28,13 @@ export default function MenuSection({ searchQuery, activeCategory, setActiveCate
         item.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      const catA = (a.category || '').toLowerCase();
+      const catB = (b.category || '').toLowerCase();
+      if (catA < catB) return -1;
+      if (catA > catB) return 1;
+      return a.name.localeCompare(b.name);
+    });
 
   if (loading) return <div>Loading menu...</div>;
 

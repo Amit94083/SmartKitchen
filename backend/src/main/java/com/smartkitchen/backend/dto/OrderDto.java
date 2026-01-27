@@ -14,6 +14,7 @@ public class OrderDto {
     private List<OrderItemDto> orderItems;
     private Long userId;
     private String customerName;
+    private String customerPhone;
 
     // Address fields
     private String addressLabel;
@@ -24,7 +25,7 @@ public class OrderDto {
     public OrderDto() {}
 
     public OrderDto(Long id, LocalDateTime orderTime, String status, Double totalAmount, List<OrderItemDto> orderItems,
-                    String addressLabel, String addressFull, String addressApartment, String addressInstructions, String customerName) {
+                    String addressLabel, String addressFull, String addressApartment, String addressInstructions, String customerName, String customerPhone) {
         this.id = id;
         this.orderTime = orderTime;
         this.status = status;
@@ -35,6 +36,7 @@ public class OrderDto {
         this.addressApartment = addressApartment;
         this.addressInstructions = addressInstructions;
         this.customerName = customerName;
+        this.customerPhone = customerPhone;
     }
 
     // Constructor without customerName (for POST response in OrderController)
@@ -52,6 +54,9 @@ public class OrderDto {
     }
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public String getCustomerPhone() { return customerPhone; }
+    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }

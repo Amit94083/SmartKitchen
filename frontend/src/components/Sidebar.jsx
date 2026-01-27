@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, Box, BookOpen, Truck, Store, Pencil } from 'lucide-react';
+import { Home, Box, BookOpen, Truck, Store, Pencil, ShoppingBag } from 'lucide-react';
 
 const Sidebar = ({ activeTab }) => {
   const navigate = useNavigate();
@@ -12,8 +12,8 @@ const Sidebar = ({ activeTab }) => {
     navigate('/login');
   };
 
-  return (
-    <aside className="w-72 bg-[#23190f] text-white flex flex-col py-8 px-6 min-h-screen">
+    return (
+      <aside className="w-72 bg-[#23190f] text-white flex flex-col py-8 px-6 min-h-screen" style={{ background: '#23190f' }}>
       <div className="flex items-center gap-3 mb-10">
         <span className="bg-orange-400 rounded-lg p-2">
           <Store className="w-7 h-7 text-white" />
@@ -24,11 +24,56 @@ const Sidebar = ({ activeTab }) => {
         </div>
       </div>
       <nav className="flex flex-col gap-2">
-        <button className={`${activeTab === 'dashboard' ? 'bg-orange-500 font-semibold' : 'hover:bg-[#2c2116]'} rounded-lg px-4 py-3 text-left flex items-center gap-3`} onClick={() => navigate('/restaurant-dashboard')}><Home className="w-5 h-5" /> Dashboard</button>
-        <button className={`${activeTab === 'inventory' ? 'bg-orange-500 font-semibold' : 'hover:bg-[#2c2116]'} rounded-lg px-4 py-3 text-left flex items-center gap-3`} onClick={() => navigate('/inventory')}><Box className="w-5 h-5" /> Inventory</button>
-        <button className={`${activeTab === 'recipes' ? 'bg-orange-500 font-semibold' : 'hover:bg-[#2c2116]'} rounded-lg px-4 py-3 text-left flex items-center gap-3`} onClick={() => navigate('/recipes')}><BookOpen className="w-5 h-5" /> Recipes</button>
-        <button className={`${activeTab === 'suppliers' ? 'bg-orange-500 font-semibold' : 'hover:bg-[#2c2116]'} rounded-lg px-4 py-3 text-left flex items-center gap-3`} onClick={() => navigate('/suppliers')}><Truck className="w-5 h-5" /> Suppliers</button>
-        <button className={`${activeTab === 'restaurant-details' ? 'bg-orange-500 font-semibold' : 'hover:bg-[#2c2116]'} rounded-lg px-4 py-3 text-left flex items-center gap-3`} onClick={() => navigate('/restaurant-details')}><Pencil className="w-5 h-5" /> Restaurant Details</button>
+        {/* Dashboard */}
+        <button
+          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base font-semibold transition-colors ${activeTab === 'dashboard' ? 'bg-orange-500 text-white' : 'bg-transparent hover:bg-[#2c2116] text-white'}`}
+          onClick={() => navigate('/restaurant-dashboard')}
+        >
+          <Home className="w-5 h-5" /> Dashboard
+        </button>
+
+        {/* Orders - after Dashboard, styled as in screenshot */}
+        <button
+          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors mt-2 ${activeTab === 'orders' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
+          onClick={() => navigate('/orders')}
+        >
+          <span className="flex items-center justify-center">
+            <ShoppingBag className={`w-5 h-5 ${activeTab === 'orders' ? 'text-orange-400' : 'text-white'}`} />
+          </span>
+          <span className={`${activeTab === 'orders' ? 'text-orange-400' : 'text-white'}`}>Orders</span>
+        </button>
+
+        {/* Inventory */}
+        <button
+          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors ${activeTab === 'inventory' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
+          onClick={() => navigate('/inventory')}
+        >
+          <Box className="w-5 h-5" /> Inventory
+        </button>
+
+        {/* Recipes */}
+        <button
+          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors ${activeTab === 'recipes' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
+          onClick={() => navigate('/recipes')}
+        >
+          <BookOpen className="w-5 h-5" /> Recipes
+        </button>
+
+        {/* Suppliers */}
+        <button
+          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors ${activeTab === 'suppliers' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
+          onClick={() => navigate('/suppliers')}
+        >
+          <Truck className="w-5 h-5" /> Suppliers
+        </button>
+
+        {/* Restaurant Details */}
+        <button
+          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors ${activeTab === 'restaurant-details' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
+          onClick={() => navigate('/restaurant-details')}
+        >
+          <Pencil className="w-5 h-5" /> Restaurant Details
+        </button>
       </nav>
       <button
         className="mt-8 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold"

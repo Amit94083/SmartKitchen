@@ -30,6 +30,7 @@ export default function Checkout() {
   const [fullAddress, setFullAddress] = useState("");
   const [apt, setApt] = useState("");
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [addressError, setAddressError] = useState(""); // Error state for address
 
   useEffect(() => {
     async function fetchAddresses() {
@@ -100,6 +101,13 @@ export default function Checkout() {
       alert('Missing user, address, or cart data.');
       return;
     }
+    // Address validation
+    if (!selectedAddress.full || selectedAddress.full.trim() === "" || selectedAddress.full === "No Address") {
+      setAddressError("Please provide a delivery address before placing your order.");
+      return;
+    } else {
+      setAddressError("");
+    }
     const orderData = {
       userId: user.id, // Add userId to the request
       totalAmount: cartTotal,
@@ -152,6 +160,10 @@ export default function Checkout() {
               </div>
               <CheckCircle className="text-orange-500 w-6 h-6" />
             </div>
+            {/* Address required message */}
+            {(!selectedAddress || !selectedAddress.full || selectedAddress.full.trim() === "" || selectedAddress.full === "No Address") && (
+              <div className="text-red-500 text-sm font-medium mb-2 text-center">Address is required for placing orders.</div>
+            )}
             <button
               className="w-full border-2 border-dashed border-gray-200 rounded-xl py-3 flex items-center justify-center gap-2 text-gray-500 font-medium hover:bg-gray-50 transition"
               onClick={() => setShowAddressModal(true)}
@@ -307,11 +319,15 @@ export default function Checkout() {
               <span className="text-orange-500">₹{(safeCartTotal + DELIVERY_FEE).toFixed(2)}</span>
             </div>
             <button
-              className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl text-lg transition"
+              className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl text-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handlePlaceOrder}
+              disabled={!selectedAddress || !selectedAddress.full || selectedAddress.full.trim() === "" || selectedAddress.full === "No Address"}
             >
               Place Order
             </button>
+            {addressError && (
+              <div className="text-red-500 text-center mt-2 font-semibold">{addressError}</div>
+            )}
           </div>
         </aside>
       </div>

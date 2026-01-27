@@ -2,6 +2,7 @@ package com.smartkitchen.backend.controller;
 
 import com.smartkitchen.backend.dto.OrderDto;
 import com.smartkitchen.backend.dto.OrderItemDto;
+import com.smartkitchen.backend.entity.MenuItem;
 import com.smartkitchen.backend.entity.Order;
 import com.smartkitchen.backend.entity.User;
 import com.smartkitchen.backend.repository.OrderRepository;
@@ -35,17 +36,24 @@ public class OrderController {
     @GetMapping("")
     public ResponseEntity<List<OrderDto>> getAllOrders() {
         logger.info("GET /api/orders called");
-        List<Order> orders = orderRepository.findAll();
+        List<Order> orders = orderRepository.findAllWithUser();
         List<OrderDto> dtos = orders.stream().map(o -> {
-            List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item ->
-                new OrderItemDto(
+            List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item -> {
+                MenuItem menuItem = item.getMenuItem();
+                return new OrderItemDto(
                     item.getId(),
                     item.getProductName(),
                     item.getQuantity(),
-                    item.getPrice()
-                )
-            ).collect(Collectors.toList());
+                    item.getPrice(),
+                    menuItem != null ? menuItem.getName() : item.getProductName(),
+                    menuItem != null ? menuItem.getDescription() : "",
+                    menuItem != null ? menuItem.getCategory() : "",
+                    menuItem != null ? menuItem.getImageUrl() : "",
+                    menuItem != null ? menuItem.getIsVeg() : null
+                );
+            }).collect(Collectors.toList());
             String customerName = o.getUser() != null ? o.getUser().getName() : "";
+            String customerPhone = o.getUser() != null ? o.getUser().getPhone() : "";
             return new OrderDto(
                 o.getId(),
                 o.getOrderTime(),
@@ -56,7 +64,8 @@ public class OrderController {
                 o.getAddressFull(),
                 o.getAddressApartment(),
                 o.getAddressInstructions(),
-                customerName
+                customerName,
+                customerPhone
             );
         }).collect(Collectors.toList());
         logger.info("GET /api/orders response: {}", dtos);
@@ -124,14 +133,20 @@ public class OrderController {
         cartService.clearCart(user.getId());
 
         // Build response DTO
-        java.util.List<OrderItemDto> itemDtos = saved.getOrderItems().stream().map(item ->
-            new OrderItemDto(
+        java.util.List<OrderItemDto> itemDtos = saved.getOrderItems().stream().map(item -> {
+            MenuItem menuItem = item.getMenuItem();
+            return new OrderItemDto(
                 item.getId(),
                 item.getProductName(),
                 item.getQuantity(),
-                item.getPrice()
-            )
-        ).collect(java.util.stream.Collectors.toList());
+                item.getPrice(),
+                menuItem != null ? menuItem.getName() : item.getProductName(),
+                menuItem != null ? menuItem.getDescription() : "",
+                menuItem != null ? menuItem.getCategory() : "",
+                menuItem != null ? menuItem.getImageUrl() : "",
+                menuItem != null ? menuItem.getIsVeg() : null
+            );
+        }).collect(java.util.stream.Collectors.toList());
         OrderDto responseDto = new OrderDto(
             saved.getId(),
             saved.getOrderTime(),
@@ -154,18 +169,26 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<OrderDto> getOrderById(@PathVariable Long id) {
         logger.info("GET /api/orders/{} called", id);
-        Order order = orderRepository.findById(id).orElse(null);
+        Order order = orderRepository.findByIdWithUser(id).orElse(null);
         if (order == null) {
             return ResponseEntity.status(404).build();
         }
-        java.util.List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item ->
-            new OrderItemDto(
+        java.util.List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item -> {
+            MenuItem menuItem = item.getMenuItem();
+            return new OrderItemDto(
                 item.getId(),
                 item.getProductName(),
                 item.getQuantity(),
-                item.getPrice()
-            )
-        ).collect(java.util.stream.Collectors.toList());
+                item.getPrice(),
+                menuItem != null ? menuItem.getName() : item.getProductName(),
+                menuItem != null ? menuItem.getDescription() : "",
+                menuItem != null ? menuItem.getCategory() : "",
+                menuItem != null ? menuItem.getImageUrl() : "",
+                menuItem != null ? menuItem.getIsVeg() : null
+            );
+        }).collect(java.util.stream.Collectors.toList());
+        String customerName = order.getUser() != null ? order.getUser().getName() : "";
+        String customerPhone = order.getUser() != null ? order.getUser().getPhone() : "";
         OrderDto responseDto = new OrderDto(
             order.getId(),
             order.getOrderTime(),
@@ -175,7 +198,9 @@ public class OrderController {
             order.getAddressLabel(),
             order.getAddressFull(),
             order.getAddressApartment(),
-            order.getAddressInstructions()
+            order.getAddressInstructions(),
+            customerName,
+            customerPhone
         );
         logger.info("GET /api/orders/{} response: {}", id, responseDto);
         return ResponseEntity.ok(responseDto);
@@ -188,16 +213,24 @@ public class OrderController {
         if (user == null) {
             return ResponseEntity.status(404).build();
         }
-        List<Order> orders = orderRepository.findByUser(user);
+        List<Order> orders = orderRepository.findByUserWithUser(user);
         List<OrderDto> dtos = orders.stream().map(o -> {
-            java.util.List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item ->
-                new OrderItemDto(
+            java.util.List<OrderItemDto> itemDtos = o.getOrderItems().stream().map(item -> {
+                MenuItem menuItem = item.getMenuItem();
+                return new OrderItemDto(
                     item.getId(),
                     item.getProductName(),
                     item.getQuantity(),
-                    item.getPrice()
-                )
-            ).collect(java.util.stream.Collectors.toList());
+                    item.getPrice(),
+                    menuItem != null ? menuItem.getName() : item.getProductName(),
+                    menuItem != null ? menuItem.getDescription() : "",
+                    menuItem != null ? menuItem.getCategory() : "",
+                    menuItem != null ? menuItem.getImageUrl() : "",
+                    menuItem != null ? menuItem.getIsVeg() : null
+                );
+            }).collect(java.util.stream.Collectors.toList());
+            String customerName = o.getUser() != null ? o.getUser().getName() : "";
+            String customerPhone = o.getUser() != null ? o.getUser().getPhone() : "";
             return new OrderDto(
                 o.getId(),
                 o.getOrderTime(),
@@ -207,7 +240,9 @@ public class OrderController {
                 o.getAddressLabel(),
                 o.getAddressFull(),
                 o.getAddressApartment(),
-                o.getAddressInstructions()
+                o.getAddressInstructions(),
+                customerName,
+                customerPhone
             );
         }).collect(Collectors.toList());
         logger.info("GET /api/orders/my/{} response: {}", userId, dtos);

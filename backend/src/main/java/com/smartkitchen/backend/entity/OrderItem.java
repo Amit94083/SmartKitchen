@@ -14,6 +14,10 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "menu_item_id", nullable = true)
+    private MenuItem menuItem;
+
     @Column(name = "product_name", nullable = false)
     private String productName;
 
@@ -48,6 +52,9 @@ public class OrderItem {
 
     public Order getOrder() { return order; }
     public void setOrder(Order order) { this.order = order; }
+
+    public MenuItem getMenuItem() { return menuItem; }
+    public void setMenuItem(MenuItem menuItem) { this.menuItem = menuItem; }
 
     public String getProductName() { return productName; }
     public void setProductName(String productName) { this.productName = productName; }
