@@ -207,7 +207,7 @@ const Inventory = () => {
   return (
     <div className="flex min-h-screen bg-[#f9f7f4]">
       <Sidebar activeTab="inventory" />
-      <main className="flex-1 px-10 py-8">
+      <main className="flex-1 px-10 py-8 ml-72 overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-4xl font-bold text-[#23190f] mb-1">Inventory</h1>

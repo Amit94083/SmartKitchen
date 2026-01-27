@@ -91,7 +91,7 @@ const RestaurantDetails = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar activeTab="restaurant-details" />
-      <main className="flex-1 px-10 py-8">
+      <main className="flex-1 px-10 py-8 ml-72 overflow-y-auto">
         <div className="max-w-4xl">
           {/* Header */}
           <div className="mb-6">

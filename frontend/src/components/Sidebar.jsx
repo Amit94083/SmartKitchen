@@ -13,7 +13,7 @@ const Sidebar = ({ activeTab }) => {
   };
 
     return (
-      <aside className="w-72 bg-[#23190f] text-white flex flex-col py-8 px-6 min-h-screen" style={{ background: '#23190f' }}>
+      <aside className="fixed left-0 top-0 w-72 bg-[#23190f] text-white flex flex-col py-8 px-6 h-screen z-10" style={{ background: '#23190f' }}>
       <div className="flex items-center gap-3 mb-10">
         <span className="bg-orange-400 rounded-lg p-2">
           <Store className="w-7 h-7 text-white" />
@@ -81,7 +81,7 @@ const Sidebar = ({ activeTab }) => {
       >
         Logout
       </button>
-      <div className="mt-auto text-xs text-gray-400 pt-10">© 2024 CloudKitchen</div>
+      <div className="mt-auto text-xs text-gray-400 pt-10">© 2026 CloudKitchen</div>
     </aside>
   );
 };

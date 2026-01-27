@@ -21,7 +21,7 @@ const Suppliers = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar activeTab="suppliers" />
-      <main className="flex-1 px-10 py-8">
+      <main className="flex-1 px-10 py-8 ml-72 overflow-y-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Suppliers</h1>
           <p className="text-gray-500">Your trusted supplier contacts.</p>

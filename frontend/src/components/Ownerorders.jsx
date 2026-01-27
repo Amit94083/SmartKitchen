@@ -46,6 +46,18 @@ const Ownerorders = () => {
     return `${Math.floor(diffInMinutes / 1440)} days ago`;
   };
 
+  // Helper function to get preparation time estimate
+  const getPreparationTime = (order) => {
+    // Check if backend has preparation time field
+    if (order.preparationTimeMinutes) {
+      return `Est. ${order.preparationTimeMinutes} mins remaining`;
+    }
+    // Fallback: estimate based on number of items
+    const itemCount = order.orderItems?.length || 1;
+    const estimatedTime = Math.max(15, itemCount * 5); // Minimum 15 mins, 5 mins per item
+    return `Est. ${estimatedTime} mins remaining`;
+  };
+
   // Helper function to get status from backend format
   const getOrderStatus = (order) => {
     if (!order.status) return 'pending';
@@ -54,7 +66,7 @@ const Ownerorders = () => {
     if (status.includes('accept')) return 'accepted';
     if (status.includes('prepar')) return 'preparing';
     if (status.includes('ready')) return 'ready';
-    if (status.includes('cancel')) return 'cancelled';
+    if (status.includes('cancel')) return 'cancel'; // Changed from 'cancelled' to 'cancel'
     if (status.includes('done') || status.includes('delivered')) return 'done';
     return 'pending';
   };
@@ -114,6 +126,63 @@ const Ownerorders = () => {
     }
   };
 
+  // Accept order handler
+  const handleAccept = async (order) => {
+    try {
+      // Call backend to accept order and deduct ingredients from inventory
+      await orderService.acceptOrderWithInventory(order.rawId);
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o.id === order.rawId ? { ...o, status: 'accepted' } : o
+        )
+      );
+      // Switch to Accepted tab
+      setActiveTab('accepted');
+    } catch (err) {
+      console.error('Error accepting order:', err);
+      alert('Failed to accept order. Please try again.');
+    }
+  };
+
+  // Reject order handler
+  const handleReject = async (order) => {
+    try {
+      // Call backend to update status
+      await orderService.updateOrderStatus(order.rawId, 'cancelled');
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o.id === order.rawId ? { ...o, status: 'cancel' } : o // Changed from 'cancelled'
+        )
+      );
+      // Switch to Cancel tab
+      setActiveTab('cancel');
+    } catch (err) {
+      console.error('Error rejecting order:', err);
+      alert('Failed to reject order. Please try again.');
+    }
+  };
+
+  // Ready order handler
+  const handleReady = async (order) => {
+    try {
+      // Call backend to update status
+      await orderService.updateOrderStatus(order.rawId, 'ready');
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o.id === order.rawId ? { ...o, status: 'ready' } : o
+        )
+      );
+      // Switch to Ready tab
+      setActiveTab('ready');
+    } catch (err) {
+      console.error('Error marking order as ready:', err);
+      alert('Failed to mark order as ready. Please try again.');
+    }
+  };
+
   const tabs = [
     { key: 'all', label: 'All', count: transformedOrders.length, icon: Package },
     { key: 'pending', label: 'Pending', count: transformedOrders.filter(o => o.status === 'pending').length, icon: Clock },
@@ -126,19 +195,19 @@ const Ownerorders = () => {
   const getStatusBadge = (status) => {
     const statusStyles = {
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      cancelled: 'bg-red-100 text-red-800 border-red-200',
+      cancel: 'bg-red-100 text-red-800 border-red-200', // Changed from 'cancelled'
       preparing: 'bg-blue-100 text-blue-800 border-blue-200',
       ready: 'bg-green-100 text-green-800 border-green-200',
-      accepted: 'bg-purple-100 text-purple-800 border-purple-200',
+      accepted: 'bg-blue-100 text-blue-800 border-blue-200', // Changed to blue to match "Preparing"
       done: 'bg-gray-100 text-gray-800 border-gray-200'
     };
 
     const statusLabels = {
       pending: 'Pending',
-      cancelled: 'Cancelled',
+      cancel: 'Cancelled', // Changed from 'cancelled'
       preparing: 'Preparing',
       ready: 'Ready',
-      accepted: 'Accepted',
+      accepted: 'Preparing', // Changed from 'Accepted' to 'Preparing'
       done: 'Done'
     };
 
@@ -152,7 +221,7 @@ const Ownerorders = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar activeTab="orders" />
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 ml-72 overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
@@ -187,14 +256,6 @@ const Ownerorders = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent w-64"
               />
-            </div>
-            
-            {/* Notifications */}
-            <div className="relative">
-              <Bell className="w-6 h-6 text-gray-600" />
-              <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                3
-              </span>
             </div>
           </div>
         </div>
@@ -241,7 +302,7 @@ const Ownerorders = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {(() => {
             let filteredOrders = transformedOrders;
             
@@ -301,10 +362,85 @@ const Ownerorders = () => {
                   <span className="text-sm">{order.time}</span>
                 </div>
 
-                {/* Total Amount */}
+                {/* Items Ordered - Show in pending section */}
+                {activeTab === 'pending' && order.status === 'pending' && order.originalOrder?.orderItems && (
+                  <div className="flex items-center gap-2 mb-4 text-gray-600">
+                    <Package className="w-4 h-4" />
+                    <span className="text-sm">
+                      {order.originalOrder.orderItems.slice(0, 3).map((item, index) => 
+                        `${item.quantity}x ${item.menuItemName || item.productName || 'Unknown Item'}`
+                      ).join(', ')}
+                      {order.originalOrder.orderItems.length > 3 && `, +${order.originalOrder.orderItems.length - 3} more`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Total Amount and Buttons */}
                 <div className="pt-4 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-                  <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
+                  {activeTab === 'pending' && order.status === 'pending' ? (
+                    // Pending orders: Total Amount, Reject, and Accept buttons in one line
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Total Amount</p>
+                        <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          className="flex items-center justify-center gap-1 px-4 py-2 border border-red-300 text-red-600 bg-white rounded-lg font-semibold hover:bg-red-50 transition focus:outline-none"
+                          onClick={() => handleReject(order)}
+                          type="button"
+                        >
+                          <X className="w-4 h-4" />
+                          Reject
+                        </button>
+                        <button
+                          className="flex items-center justify-center gap-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition focus:outline-none"
+                          onClick={() => handleAccept(order)}
+                          type="button"
+                        >
+                          <Check className="w-4 h-4" />
+                          Accept
+                        </button>
+                      </div>
+                    </div>
+                  ) : activeTab === 'accepted' && order.status === 'accepted' ? (
+                    // Accepted orders: Total Amount and Ready button in one line
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Total Amount</p>
+                        <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
+                      </div>
+                      <button
+                        className="flex items-center justify-center gap-1 px-6 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition focus:outline-none"
+                        onClick={() => handleReady(order)}
+                        type="button"
+                      >
+                        <Truck className="w-4 h-4" />
+                        Ready
+                      </button>
+                    </div>
+                  ) : activeTab === 'ready' && order.status === 'ready' ? (
+                    // Ready orders: Total Amount and Assign Delivery button in one line
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Total Amount</p>
+                        <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
+                      </div>
+                      <button
+                        className="flex items-center justify-center gap-1 px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition focus:outline-none"
+                        type="button"
+                      >
+                        <Truck className="w-4 h-4" />
+                        Assign Delivery
+                      </button>
+                    </div>
+                  ) : (
+                    // Other orders: Just show total amount
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Total Amount</p>
+                      <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ));

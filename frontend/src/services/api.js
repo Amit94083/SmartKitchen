@@ -81,6 +81,14 @@ export const orderService = {
     const response = await api.get('/orders');
     return response.data;
   },
+  updateOrderStatus: async (orderId, status) => {
+    const response = await api.put(`/orders/${orderId}/status`, { status });
+    return response.data;
+  },
+  acceptOrderWithInventory: async (orderId) => {
+    const response = await api.put(`/orders/${orderId}/accept-with-inventory`);
+    return response.data;
+  },
 };
 export const cartService = {
   addToCart: async (userId, menuItemId, quantity = 1) => {

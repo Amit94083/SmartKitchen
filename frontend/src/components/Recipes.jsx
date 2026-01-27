@@ -256,7 +256,7 @@ const Recipes = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar activeTab="recipes" />
-      <main className="flex-1 px-10 py-8">
+      <main className="flex-1 px-10 py-8 ml-72 overflow-y-auto">
         <div className="mb-8 flex justify-between items-start">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Recipes</h1>

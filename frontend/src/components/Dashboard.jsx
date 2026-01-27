@@ -194,7 +194,7 @@ const Dashboard = () => {
   return (
     <div className="flex min-h-screen bg-[#f9f7f4]">
       <Sidebar activeTab="dashboard" />
-      <main className="flex-1 px-10 py-8">
+      <main className="flex-1 px-10 py-8 ml-72 overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -218,13 +218,13 @@ const Dashboard = () => {
         </div>
 
         {/* Low Stock Alert */}
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start flex-wrap gap-4">
-          <div className="flex flex-col items-start min-w-[120px] mr-4">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <span className="text-red-600 font-bold flex items-center gap-1">
-              <span style={{fontSize: '1.2em'}}>⚠</span> Low<br/>Stock<br/>Alert
+              <span style={{fontSize: '1.2em'}}>⚠</span> Low Stock Alert
             </span>
           </div>
-          <div className="flex flex-wrap gap-2 flex-1 items-center">
+          <div className="flex gap-2 flex-1 items-center">
             {lowStockIngredients.length === 0 ? (
               <span className="bg-white rounded-full px-3 py-1 text-sm text-gray-700">No low stock items</span>
             ) : (
@@ -235,7 +235,7 @@ const Dashboard = () => {
               ))
             )}
           </div>
-          <div className="flex flex-col items-end min-w-[60px]">
+          <div className="flex items-center">
             <span className="text-xs text-red-400">{lowStockIngredients.length} item{lowStockIngredients.length !== 1 ? 's' : ''}</span>
           </div>
         </div>
