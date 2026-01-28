@@ -21,6 +21,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Restaurant from './components/Restaurant';
 import Checkout from './components/Checkout';
 import OrderStatus from './components/OrderStatus';
+import DeliveryDashboard from './components/DeliveryDashboard';
 
 const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth();
@@ -151,6 +152,12 @@ const AppRoutes = () => {
             <OrderStatus />
           </ProtectedRoute>
         }
+      />
+
+      {/* Delivery Boy Dashboard */}
+      <Route
+        path="/delivery/dashboard"
+        element={<DeliveryDashboard />}
       />
 
       {/* Profile Page */}
