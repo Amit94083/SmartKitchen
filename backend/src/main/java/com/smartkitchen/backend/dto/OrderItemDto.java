@@ -2,6 +2,9 @@ package com.smartkitchen.backend.dto;
 
 public class OrderItemDto {
     private Long id;
+    private Long menuItemId;
+        public Long getMenuItemId() { return menuItemId; }
+        public void setMenuItemId(Long menuItemId) { this.menuItemId = menuItemId; }
     private String productName;
     private Integer quantity;
     private Double price;

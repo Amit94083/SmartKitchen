@@ -1,5 +1,7 @@
 package com.smartkitchen.backend.dto;
 
+import java.time.LocalDateTime;
+
 public class UserDto {
     private Long id;
     private String name;
@@ -7,6 +9,7 @@ public class UserDto {
     private String phone;
     private String userType;
     private String restaurantName; // Only for restaurant owners
+    private LocalDateTime createdAt; // Join date
 
     // Address fields
     private String addressLabel;
@@ -17,7 +20,7 @@ public class UserDto {
     public UserDto() {}
 
     public UserDto(Long id, String name, String email, String phone, String userType, String restaurantName,
-                   String addressLabel, String addressFull, String addressApartment, String addressInstructions) {
+                   String addressLabel, String addressFull, String addressApartment, String addressInstructions, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -28,6 +31,7 @@ public class UserDto {
         this.addressFull = addressFull;
         this.addressApartment = addressApartment;
         this.addressInstructions = addressInstructions;
+        this.createdAt = createdAt;
     }
         public String getAddressLabel() {
             return addressLabel;
@@ -101,5 +105,13 @@ public class UserDto {
     
     public void setRestaurantName(String restaurantName) {
         this.restaurantName = restaurantName;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

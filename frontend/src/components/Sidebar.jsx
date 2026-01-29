@@ -35,7 +35,7 @@ const Sidebar = ({ activeTab }) => {
         {/* Orders - after Dashboard, styled as in screenshot */}
         <button
           className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors mt-2 ${activeTab === 'orders' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
-          onClick={() => navigate('/orders')}
+          onClick={() => navigate('/owner/orders')}
         >
           <span className="flex items-center justify-center">
             <ShoppingBag className={`w-5 h-5 ${activeTab === 'orders' ? 'text-orange-400' : 'text-white'}`} />

@@ -22,6 +22,8 @@ import Restaurant from './components/Restaurant';
 import Checkout from './components/Checkout';
 import OrderStatus from './components/OrderStatus';
 import DeliveryDashboard from './components/DeliveryDashboard';
+import DeliveryPartners from './components/DeliveryPartners';
+import DeliveryOrders from './components/DeliveryOrders';
 
 const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth();
@@ -81,7 +83,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/orders"
+        path="/owner/orders"
         element={
           <ProtectedRoute requiresOwner>
             <Ownerorders />
@@ -101,14 +103,7 @@ const AppRoutes = () => {
         }
       />
 
-      <Route
-        path="/orders"
-        element={
-          <ProtectedRoute requiresCustomer>
-            <Orders />
-          </ProtectedRoute>
-        }
-      />
+
 
       <Route
         path="/cart"
@@ -159,6 +154,18 @@ const AppRoutes = () => {
         path="/delivery/dashboard"
         element={<DeliveryDashboard />}
       />
+      
+      {/* Delivery Partners */}
+      <Route
+        path="/delivery/partners"
+        element={<DeliveryPartners />}
+      />
+      
+      {/* Delivery Orders */}
+      <Route
+        path="/delivery/orders"
+        element={<DeliveryOrders />}
+      />
 
       {/* Profile Page */}
       <Route
@@ -178,7 +185,9 @@ const AppRoutes = () => {
 export default function App() {
   return (
     <Router>
-      <AppRoutes />
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </Router>
   );
 }

@@ -4,6 +4,7 @@ import com.smartkitchen.backend.dto.OrderDto;
 import com.smartkitchen.backend.dto.OrderItemDto;
 import com.smartkitchen.backend.entity.MenuItem;
 import com.smartkitchen.backend.entity.Order;
+import com.smartkitchen.backend.entity.OrderStatus;
 import com.smartkitchen.backend.entity.User;
 import com.smartkitchen.backend.entity.Recipe;
 import com.smartkitchen.backend.entity.Ingredient;
@@ -11,6 +12,8 @@ import com.smartkitchen.backend.repository.OrderRepository;
 import com.smartkitchen.backend.repository.UserRepository;
 import com.smartkitchen.backend.repository.RecipeRepository;
 import com.smartkitchen.backend.repository.IngredientRepository;
+import com.smartkitchen.backend.repository.MenuItemRepository;
+import com.smartkitchen.backend.repository.OrderItemRepository;
 import com.smartkitchen.backend.entity.OrderItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
@@ -40,6 +43,52 @@ public class OrderController {
     private RecipeRepository recipeRepository;
     @Autowired
     private IngredientRepository ingredientRepository;
+    @Autowired
+    private MenuItemRepository menuItemRepository;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+        /**
+         * Update inventory for an order by deducting ingredient quantities based on recipes
+         * POST /api/orders/{orderId}/update-inventory
+         */
+        @PostMapping("/{orderId}/update-inventory")
+        @Transactional
+        public ResponseEntity<?> updateInventoryForOrder(@PathVariable Long orderId) {
+            logger.info("POST /api/orders/{}/update-inventory called", orderId);
+            Order order = orderRepository.findByIdWithUser(orderId).orElse(null);
+            if (order == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
+            }
+            List<OrderItem> orderItems = order.getOrderItems();
+            if (orderItems == null || orderItems.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No items in order");
+            }
+            for (OrderItem orderItem : orderItems) {
+                MenuItem menuItem = orderItem.getMenuItem();
+                if (menuItem == null) {
+                    logger.warn("OrderItem {} has no menuItem, skipping", orderItem.getId());
+                    continue;
+                }
+                List<Recipe> recipes = recipeRepository.findByMenuItem(menuItem);
+                for (Recipe recipe : recipes) {
+                    Ingredient ingredient = recipe.getIngredient();
+                    if (ingredient == null) {
+                        logger.warn("Recipe {} has no ingredient, skipping", recipe.getId());
+                        continue;
+                    }
+                    double totalToDeduct = recipe.getQuantityRequired() * orderItem.getQuantity();
+                    double newQty = ingredient.getCurrentQuantity() - totalToDeduct;
+                    if (newQty < 0) {
+                        logger.warn("Ingredient {} would go negative. Setting to 0.", ingredient.getIngredientId());
+                        newQty = 0;
+                    }
+                    ingredient.setCurrentQuantity(newQty);
+                    ingredientRepository.save(ingredient);
+                    logger.info("Deducted {} from ingredient {} for order {}", totalToDeduct, ingredient.getIngredientId(), orderId);
+                }
+            }
+            return ResponseEntity.ok().body("Inventory updated for order " + orderId);
+        }
     @Autowired
     private com.smartkitchen.backend.service.CartService cartService;
     @PersistenceContext
@@ -106,7 +155,7 @@ public class OrderController {
         Order order = new Order();
         order.setUser(user);
         order.setOrderTime(java.time.LocalDateTime.now());
-        order.setStatus("Pending");
+        order.setStatus(OrderStatus.Placed);
         order.setTotalAmount(orderDto.getTotalAmount());
 
         // Use address from request if provided, else fallback to user entity
@@ -135,6 +184,9 @@ public class OrderController {
                 item.setQuantity(dto.getQuantity());
                 item.setPrice(dto.getPrice());
                 item.setOrder(order);
+                if (dto.getMenuItemId() != null) {
+                    menuItemRepository.findById(dto.getMenuItemId()).ifPresent(item::setMenuItem);
+                }
                 return item;
             }).collect(java.util.stream.Collectors.toList());
             order.setOrderItems(items);
@@ -272,135 +324,15 @@ public class OrderController {
         if (order == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
         }
-        order.setStatus(statusUpdateRequest.getStatus());
+        try {
+            order.setStatus(OrderStatus.valueOf(statusUpdateRequest.getStatus()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid status value");
+        }
         orderRepository.save(order);
         return ResponseEntity.ok().body("Order status updated successfully");
     }
 
-    /**
-     * Accept order and deduct ingredients from inventory
-     * PUT /api/orders/{id}/accept-with-inventory
-     */
-    @PutMapping("/{id}/accept-with-inventory")
-    @Transactional
-    public ResponseEntity<?> acceptOrderWithInventory(@PathVariable Long id) {
-        logger.info("PUT /api/orders/{}/accept-with-inventory called", id);
-        try {
-            Order order = orderRepository.findById(id).orElse(null);
-            if (order == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
-            }
-            
-            // Check if ingredients are available and deduct them
-            boolean ingredientsDeducted = deductIngredientsForOrder(order);
-            if (!ingredientsDeducted) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient ingredients to fulfill order");
-            }
-            
-            // Update order status to accepted
-            order.setStatus("accepted");
-            orderRepository.save(order);
-            
-            logger.info("Order {} accepted successfully and ingredients deducted", id);
-            return ResponseEntity.ok().body("Order accepted and ingredients deducted successfully");
-        } catch (Exception e) {
-            logger.error("Error accepting order with inventory: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process order: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Helper method to deduct ingredients from inventory based on order items
-     */
-    private boolean deductIngredientsForOrder(Order order) {
-        try {
-            logger.info("Starting ingredient deduction for order: {}", order.getId());
-            logger.info("Order has {} items", order.getOrderItems().size());
-            
-            // First pass: Check if all required ingredients are available
-            for (OrderItem orderItem : order.getOrderItems()) {
-                logger.info("Processing order item: {} (quantity: {})", orderItem.getProductName(), orderItem.getQuantity());
-                
-                MenuItem menuItem = orderItem.getMenuItem();
-                if (menuItem == null) {
-                    logger.warn("Menu item not found for order item: {}", orderItem.getProductName());
-                    continue;
-                }
-                
-                logger.info("Found menu item: {} (ID: {})", menuItem.getName(), menuItem.getItemId());
-
-                // Get recipes for this menu item
-                List<Recipe> recipes = recipeRepository.findByMenuItemItemId(menuItem.getItemId());
-                logger.info("Found {} recipes for menu item: {}", recipes.size(), menuItem.getName());
-                
-                if (recipes.isEmpty()) {
-                    logger.warn("No recipes found for menu item: {} (ID: {})", menuItem.getName(), menuItem.getItemId());
-                    continue;
-                }
-                
-                for (Recipe recipe : recipes) {
-                    Ingredient ingredient = recipe.getIngredient();
-                    double requiredQuantity = recipe.getQuantityRequired() * orderItem.getQuantity();
-                    
-                    logger.info("Recipe requires {} {} of {}, available: {}", 
-                        requiredQuantity, ingredient.getUnit(), ingredient.getName(), ingredient.getCurrentQuantity());
-                    
-                    if (ingredient.getCurrentQuantity() < requiredQuantity) {
-                        logger.warn("Insufficient ingredient: {} required: {}, available: {}", 
-                            ingredient.getName(), requiredQuantity, ingredient.getCurrentQuantity());
-                        return false;
-                    }
-                }
-            }
-
-            // Second pass: Actually deduct the ingredients
-            logger.info("All ingredients available, proceeding with deduction");
-            for (OrderItem orderItem : order.getOrderItems()) {
-                MenuItem menuItem = orderItem.getMenuItem();
-                if (menuItem == null) continue;
-
-                List<Recipe> recipes = recipeRepository.findByMenuItemItemId(menuItem.getItemId());
-                for (Recipe recipe : recipes) {
-                    Ingredient ingredient = recipe.getIngredient();
-                    double requiredQuantity = recipe.getQuantityRequired() * orderItem.getQuantity();
-                    
-                    double previousQuantity = ingredient.getCurrentQuantity();
-                    
-                    logger.info("Before deduction - Ingredient ID: {}, Name: {}, Current Quantity: {}, Required: {}", 
-                        ingredient.getIngredientId(), ingredient.getName(), ingredient.getCurrentQuantity(), requiredQuantity);
-                    
-                    // Deduct from current quantity
-                    ingredient.setCurrentQuantity(ingredient.getCurrentQuantity() - requiredQuantity);
-                    ingredient.setLastModifiedAt(java.time.LocalDateTime.now());
-                    
-                    // Save the updated ingredient
-                    Ingredient savedIngredient = ingredientRepository.save(ingredient);
-                    
-                    // Force flush to database
-                    entityManager.flush();
-                    
-                    logger.info("After save and flush - Ingredient ID: {}, Name: {}, New Quantity: {}", 
-                        savedIngredient.getIngredientId(), savedIngredient.getName(), savedIngredient.getCurrentQuantity());
-                    
-                    // Clear entity manager cache and reload from database
-                    entityManager.clear();
-                    Ingredient reloadedIngredient = ingredientRepository.findById(ingredient.getIngredientId()).orElse(null);
-                    if (reloadedIngredient != null) {
-                        logger.info("Verification from database - Ingredient {}: Previous={}, New={}, Database={})", 
-                            reloadedIngredient.getName(), previousQuantity, ingredient.getCurrentQuantity(), reloadedIngredient.getCurrentQuantity());
-                    } else {
-                        logger.error("Could not reload ingredient with ID: {}", ingredient.getIngredientId());
-                    }
-                }
-            }
-            
-            logger.info("Ingredient deduction completed successfully for order: {}", order.getId());
-            return true;
-        } catch (Exception e) {
-            logger.error("Error deducting ingredients: ", e);
-            return false;
-        }
-    }
 
     // DTO for status update
     public static class StatusUpdateRequest {

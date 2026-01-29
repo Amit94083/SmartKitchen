@@ -4,7 +4,10 @@ import Sidebar from './Sidebar';
 import { orderService } from '../services/api';
 
 const Ownerorders = () => {
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState(() => {
+    // Initialize from localStorage, fallback to 'all'
+    return localStorage.getItem('ownerOrdersActiveTab') || 'all';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [period, setPeriod] = useState('Today');
   const [orders, setOrders] = useState([]);
@@ -12,6 +15,12 @@ const Ownerorders = () => {
   const [error, setError] = useState(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // Function to update active tab and save to localStorage
+  const updateActiveTab = (tabKey) => {
+    setActiveTab(tabKey);
+    localStorage.setItem('ownerOrdersActiveTab', tabKey);
+  };
 
   // Fetch orders from backend
   useEffect(() => {
@@ -58,17 +67,19 @@ const Ownerorders = () => {
     return `Est. ${estimatedTime} mins remaining`;
   };
 
-  // Helper function to get status from backend format
+  // Helper function to map backend PascalCase status to UI status
   const getOrderStatus = (order) => {
-    if (!order.status) return 'pending';
-    const status = order.status.toLowerCase();
-    if (status.includes('placed') || status.includes('pending')) return 'pending';
-    if (status.includes('accept')) return 'accepted';
-    if (status.includes('prepar')) return 'preparing';
-    if (status.includes('ready')) return 'ready';
-    if (status.includes('cancel')) return 'cancel'; // Changed from 'cancelled' to 'cancel'
-    if (status.includes('done') || status.includes('delivered')) return 'done';
-    return 'pending';
+    if (!order.status) return 'Placed';
+    switch (order.status) {
+      case 'Placed': return 'Placed';
+      case 'Confirmed': return 'Confirmed';
+      case 'Preparing': return 'Preparing';
+      case 'Ready': return 'Ready';
+      case 'OnTheWay': return 'OnTheWay';
+      case 'Delivered': return 'Delivered';
+      case 'Cancelled': return 'Cancelled';
+      default: return order.status;
+    }
   };
 
   // Calculate period boundaries
@@ -129,16 +140,14 @@ const Ownerorders = () => {
   // Accept order handler
   const handleAccept = async (order) => {
     try {
-      // Call backend to accept order and deduct ingredients from inventory
-      await orderService.acceptOrderWithInventory(order.rawId);
-      // Update local state
+      await orderService.acceptOrderAndUpdateInventory(order.rawId);
+      await orderService.updateOrderStatus(order.rawId, 'Confirmed');
       setOrders((prevOrders) =>
         prevOrders.map((o) =>
-          o.id === order.rawId ? { ...o, status: 'accepted' } : o
+          o.id === order.rawId ? { ...o, status: 'Confirmed' } : o
         )
       );
-      // Switch to Accepted tab
-      setActiveTab('accepted');
+      updateActiveTab('Confirmed');
     } catch (err) {
       console.error('Error accepting order:', err);
       alert('Failed to accept order. Please try again.');
@@ -148,16 +157,13 @@ const Ownerorders = () => {
   // Reject order handler
   const handleReject = async (order) => {
     try {
-      // Call backend to update status
-      await orderService.updateOrderStatus(order.rawId, 'cancelled');
-      // Update local state
+      await orderService.updateOrderStatus(order.rawId, 'Cancelled'); 
       setOrders((prevOrders) =>
         prevOrders.map((o) =>
-          o.id === order.rawId ? { ...o, status: 'cancel' } : o // Changed from 'cancelled'
+          o.id === order.rawId ? { ...o, status: 'Cancelled' } : o
         )
       );
-      // Switch to Cancel tab
-      setActiveTab('cancel');
+      updateActiveTab('Cancelled');
     } catch (err) {
       console.error('Error rejecting order:', err);
       alert('Failed to reject order. Please try again.');
@@ -168,52 +174,87 @@ const Ownerorders = () => {
   const handleReady = async (order) => {
     try {
       // Call backend to update status
-      await orderService.updateOrderStatus(order.rawId, 'ready');
+      await orderService.updateOrderStatus(order.rawId, 'Ready');
       // Update local state
       setOrders((prevOrders) =>
         prevOrders.map((o) =>
-          o.id === order.rawId ? { ...o, status: 'ready' } : o
+          o.id === order.rawId ? { ...o, status: 'Ready' } : o
         )
       );
       // Switch to Ready tab
-      setActiveTab('ready');
+      updateActiveTab('Ready');
     } catch (err) {
       console.error('Error marking order as ready:', err);
       alert('Failed to mark order as ready. Please try again.');
     }
   };
 
+  // Start preparing order handler
+  const handleStartPreparing = async (order) => {
+    try {
+      // Call backend to update status
+      await orderService.updateOrderStatus(order.rawId, 'Preparing');
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o.id === order.rawId ? { ...o, status: 'Preparing' } : o
+        )
+      );
+      // Switch to Preparing tab
+      updateActiveTab('Preparing');
+    } catch (err) {
+      console.error('Error starting order preparation:', err);
+      alert('Failed to start order preparation. Please try again.');
+    }
+  };
+
+  // Assign delivery partner handler
+  const handleAssignDelivery = async (order) => {
+    try {
+      // Redirect to delivery dashboard for assignment
+      window.location.href = '/delivery/dashboard';
+    } catch (err) {
+      console.error('Error redirecting to delivery dashboard:', err);
+      alert('Failed to redirect to delivery dashboard. Please try again.');
+    }
+  };
+
   const tabs = [
     { key: 'all', label: 'All', count: transformedOrders.length, icon: Package },
-    { key: 'pending', label: 'Pending', count: transformedOrders.filter(o => o.status === 'pending').length, icon: Clock },
-    { key: 'accepted', label: 'Accepted', count: transformedOrders.filter(o => o.status === 'accepted').length, icon: CheckCircle },
-    { key: 'ready', label: 'Ready', count: transformedOrders.filter(o => o.status === 'ready').length, icon: Truck },
-    { key: 'cancel', label: 'Cancel', count: transformedOrders.filter(o => o.status === 'cancelled').length, icon: X },
-    { key: 'done', label: 'Done', count: transformedOrders.filter(o => o.status === 'done').length, icon: Check }
+    { key: 'Placed', label: 'Placed', count: transformedOrders.filter(o => o.status === 'Placed').length, icon: Clock },
+    { key: 'Confirmed', label: 'Confirmed', count: transformedOrders.filter(o => o.status === 'Confirmed').length, icon: CheckCircle },
+    { key: 'Preparing', label: 'Preparing', count: transformedOrders.filter(o => o.status === 'Preparing').length, icon: Truck },
+    { key: 'Ready', label: 'Ready', count: transformedOrders.filter(o => o.status === 'Ready').length, icon: Truck },
+    { key: 'OnTheWay', label: 'On the Way', count: transformedOrders.filter(o => o.status === 'OnTheWay').length, icon: Truck },
+    { key: 'Delivered', label: 'Delivered', count: transformedOrders.filter(o => o.status === 'Delivered').length, icon: Check },
+    { key: 'Cancelled', label: 'Cancelled', count: transformedOrders.filter(o => o.status === 'Cancelled').length, icon: X }
   ];
 
   const getStatusBadge = (status) => {
+
     const statusStyles = {
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      cancel: 'bg-red-100 text-red-800 border-red-200', // Changed from 'cancelled'
-      preparing: 'bg-blue-100 text-blue-800 border-blue-200',
-      ready: 'bg-green-100 text-green-800 border-green-200',
-      accepted: 'bg-blue-100 text-blue-800 border-blue-200', // Changed to blue to match "Preparing"
-      done: 'bg-gray-100 text-gray-800 border-gray-200'
+      Placed: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      Confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
+      Preparing: 'bg-blue-100 text-blue-800 border-blue-200',
+      Ready: 'bg-green-100 text-green-800 border-green-200',
+      OnTheWay: 'bg-orange-100 text-orange-800 border-orange-200',
+      Delivered: 'bg-gray-100 text-gray-800 border-gray-200',
+      Cancelled: 'bg-red-100 text-red-800 border-red-200'
     };
 
     const statusLabels = {
-      pending: 'Pending',
-      cancel: 'Cancelled', // Changed from 'cancelled'
-      preparing: 'Preparing',
-      ready: 'Ready',
-      accepted: 'Preparing', // Changed from 'Accepted' to 'Preparing'
-      done: 'Done'
+      Placed: 'Placed',
+      Confirmed: 'Confirmed',
+      Preparing: 'Preparing',
+      Ready: 'Ready',
+      OnTheWay: 'On the Way',
+      Delivered: 'Delivered',
+      Cancelled: 'Cancelled'
     };
 
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusStyles[status]}`}>
-        {statusLabels[status]}
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${statusStyles[status] || ''}`}>
+        {statusLabels[status] || status}
       </span>
     );
   };
@@ -221,23 +262,23 @@ const Ownerorders = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar activeTab="orders" />
-      <main className="flex-1 p-8 ml-72 overflow-y-auto">
+      <main className="flex-1 p-4 ml-72 overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-start mb-8">
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Orders</h1>
-            <p className="text-gray-600">Manage incoming orders and track their status.</p>
+            <h1 className="text-xl font-bold text-gray-900 mb-1">Orders</h1>
+            <p className="text-sm text-gray-600">Manage incoming orders and track their status.</p>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {/* Period Filter */}
-            <div className="flex gap-2 bg-white rounded-xl shadow px-2 py-1">
+            <div className="flex gap-1 bg-white rounded-lg shadow px-1 py-0.5">
               {['Today', 'This Week', 'This Month'].map(p => (
                 <button
                   key={p}
                   className={
-                    (period === p ? 'bg-orange-500 text-white font-semibold' : 'text-gray-600') +
-                    ' px-4 py-1 rounded-lg'
+                    (period === p ? 'bg-orange-500 text-white font-medium' : 'text-gray-600') +
+                    ' px-2 py-1 rounded-md text-xs'
                   }
                   onClick={() => setPeriod(p)}
                 >
@@ -248,35 +289,35 @@ const Ownerorders = () => {
             
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent w-64"
+                className="pl-8 pr-3 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-orange-500 focus:border-transparent w-48 text-sm"
               />
             </div>
           </div>
         </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-8 border-b border-gray-200">
+      <div className="flex gap-2 mb-4 border-b border-gray-200">
         {tabs.map((tab) => {
           const IconComponent = tab.icon;
           return (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium transition-colors ${
+              onClick={() => updateActiveTab(tab.key)}
+              className={`flex items-center gap-1 px-3 py-2 border-b-2 text-sm font-medium transition-colors ${
                 activeTab === tab.key
                   ? 'border-orange-500 text-orange-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              <IconComponent className="w-5 h-5" />
+              <IconComponent className="w-4 h-4" />
               {tab.label}
-              <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+              <span className={`px-1.5 py-0.5 text-xs rounded-full ${
                 activeTab === tab.key ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-600'
               }`}>
                 {tab.count}
@@ -302,7 +343,7 @@ const Ownerorders = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
           {(() => {
             let filteredOrders = transformedOrders;
             
@@ -332,115 +373,81 @@ const Ownerorders = () => {
             return filteredOrders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow"
               >
-                {/* Order Header */}
-                <div className="flex justify-between items-start mb-4">
-                  <h3 
-                    className="text-lg font-semibold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors"
-                    onClick={() => handleOrderClick(order)}
-                  >
-                    {order.id}
-                  </h3>
-                  {getStatusBadge(order.status)}
-                </div>
-
-                {/* Customer Info */}
-                <div className="flex items-center gap-2 mb-3 text-gray-600">
-                  <User className="w-4 h-4" />
-                  <span 
-                    className="text-sm cursor-pointer hover:text-gray-800 transition-colors"
-                    onClick={() => handleOrderClick(order)}
-                  >
-                    {order.customer}
-                  </span>
-                </div>
-
-                {/* Time */}
-                <div className="flex items-center gap-2 mb-4 text-gray-500">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">{order.time}</span>
-                </div>
-
-                {/* Items Ordered - Show in pending section */}
-                {activeTab === 'pending' && order.status === 'pending' && order.originalOrder?.orderItems && (
-                  <div className="flex items-center gap-2 mb-4 text-gray-600">
-                    <Package className="w-4 h-4" />
-                    <span className="text-sm">
-                      {order.originalOrder.orderItems.slice(0, 3).map((item, index) => 
-                        `${item.quantity}x ${item.menuItemName || item.productName || 'Unknown Item'}`
-                      ).join(', ')}
-                      {order.originalOrder.orderItems.length > 3 && `, +${order.originalOrder.orderItems.length - 3} more`}
-                    </span>
+                {/* Single Line Layout */}
+                <div className="flex items-center justify-between gap-4">
+                  {/* Left: Order Info */}
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <h3 
+                      className="text-sm font-semibold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors whitespace-nowrap"
+                      onClick={() => handleOrderClick(order)}
+                    >
+                      {order.id}
+                    </h3>
+                    {getStatusBadge(order.status)}
+                    <div className="flex items-center gap-1 text-gray-600 min-w-0">
+                      <User className="w-3 h-3 flex-shrink-0" />
+                      <span 
+                        className="text-xs cursor-pointer hover:text-gray-800 transition-colors truncate"
+                        onClick={() => handleOrderClick(order)}
+                      >
+                        {order.customer}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <Clock className="w-3 h-3" />
+                      <span className="text-xs whitespace-nowrap">{order.time}</span>
+                    </div>
+                    <div className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                      ₹{order.amount}
+                    </div>
                   </div>
-                )}
-
-                {/* Total Amount and Buttons */}
-                <div className="pt-4 border-t border-gray-100">
-                  {activeTab === 'pending' && order.status === 'pending' ? (
-                    // Pending orders: Total Amount, Reject, and Accept buttons in one line
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Total Amount</p>
-                        <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
-                      </div>
-                      <div className="flex gap-2">
+                  {/* Right: Action Buttons */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {activeTab === 'Placed' && order.status === 'Placed' ? (
+                      <>
                         <button
-                          className="flex items-center justify-center gap-1 px-4 py-2 border border-red-300 text-red-600 bg-white rounded-lg font-semibold hover:bg-red-50 transition focus:outline-none"
+                          className="flex items-center gap-1 px-2 py-1 border border-red-300 text-red-600 bg-white rounded text-xs font-medium hover:bg-red-50 transition"
                           onClick={() => handleReject(order)}
-                          type="button"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 h-3" />
                           Reject
                         </button>
                         <button
-                          className="flex items-center justify-center gap-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition focus:outline-none"
+                          className="flex items-center gap-1 px-2 py-1 bg-orange-500 text-white rounded text-xs font-medium hover:bg-orange-600 transition"
                           onClick={() => handleAccept(order)}
-                          type="button"
                         >
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3 h-3" />
                           Accept
                         </button>
-                      </div>
-                    </div>
-                  ) : activeTab === 'accepted' && order.status === 'accepted' ? (
-                    // Accepted orders: Total Amount and Ready button in one line
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-                        <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
-                      </div>
+                      </>
+                    ) : activeTab === 'Confirmed' && order.status === 'Confirmed' ? (
                       <button
-                        className="flex items-center justify-center gap-1 px-6 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition focus:outline-none"
-                        onClick={() => handleReady(order)}
-                        type="button"
+                        className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded text-xs font-medium hover:bg-blue-600 transition"
+                        onClick={() => handleStartPreparing(order)}
                       >
-                        <Truck className="w-4 h-4" />
-                        Ready
+                        <Package className="w-3 h-3" />
+                        Start Preparing
                       </button>
-                    </div>
-                  ) : activeTab === 'ready' && order.status === 'ready' ? (
-                    // Ready orders: Total Amount and Assign Delivery button in one line
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-                        <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
-                      </div>
+                    ) : activeTab === 'Preparing' && order.status === 'Preparing' ? (
                       <button
-                        className="flex items-center justify-center gap-1 px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition focus:outline-none"
-                        type="button"
+                        className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded text-xs font-medium hover:bg-green-600 transition"
+                        onClick={() => handleReady(order)}
                       >
-                        <Truck className="w-4 h-4" />
+                        <Check className="w-3 h-3" />
+                        Mark Ready
+                      </button>
+                    ) : activeTab === 'Ready' && order.status === 'Ready' ? (
+                      <button
+                        className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded text-xs font-medium hover:bg-orange-600 transition"
+                        onClick={() => handleAssignDelivery(order)}
+                      >
+                        <Truck className="w-3 h-3" />
                         Assign Delivery
                       </button>
-                    </div>
-                  ) : (
-                    // Other orders: Just show total amount
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-                      <p className="text-xl font-bold text-gray-900">₹{order.amount}</p>
-                    </div>
-                  )}
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ));

@@ -7,12 +7,19 @@ import AppHeader from "./AppHeader";
 import { imageMap } from "../assets/food/index";
 
 function StatusBadge({ status }) {
+  // Map 'pending' from database to 'Placed' for display
+  const displayStatus = status === "pending" ? "Placed" : status;
+  
   let color = "bg-gray-400";
-  if (status === "Order Placed" || status === "pending") color = "bg-orange-400";
-  if (status === "Delivered") color = "bg-green-500";
-  if (status === "Cancelled") color = "bg-red-500";
+  if (displayStatus === "Placed") color = "bg-orange-400";
+  if (displayStatus === "Delivered") color = "bg-green-500";
+  if (displayStatus === "Cancelled") color = "bg-red-500";
+  if (displayStatus === "Ready") color = "bg-blue-500";
+  if (displayStatus === "Confirmed") color = "bg-blue-400";
+  if (displayStatus === "Preparing") color = "bg-yellow-500";
+  if (displayStatus === "OnTheWay") color = "bg-purple-500";
   return (
-    <span className={`inline-block px-3 py-1 text-xs font-semibold text-white rounded-full ${color}`}>{status}</span>
+    <span className={`inline-block px-3 py-1 text-xs font-semibold text-white rounded-full ${color}`}>{displayStatus}</span>
   );
 }
 
@@ -53,8 +60,8 @@ export default function Orders() {
   }, []);
 
   // Split orders into active and past
-  const activeOrders = orders.filter(o => o.status && o.status.toLowerCase() !== "delivered" && o.status.toLowerCase() !== "cancelled");
-  const pastOrders = orders.filter(o => o.status && (o.status.toLowerCase() === "delivered" || o.status.toLowerCase() === "cancelled"));
+  const activeOrders = orders.filter(o => o.status && o.status !== "Delivered" && o.status !== "Cancelled");
+  const pastOrders = orders.filter(o => o.status && (o.status === "Delivered" || o.status === "Cancelled"));
 
   const shownOrders = tab === "active" ? activeOrders : pastOrders;
 
@@ -129,9 +136,7 @@ export default function Orders() {
                       <div className="font-semibold text-lg mb-1">{order.orderItems?.length || 0} item{order.orderItems?.length === 1 ? "" : "s"} • ₹{order.totalAmount}</div>
                     </div>
                     <div className="absolute right-0 top-0">
-                      <span className="inline-block bg-yellow-100 text-yellow-700 text-sm font-semibold px-3 py-1 rounded-md shadow-sm border border-yellow-200">
-                        {order.status?.toLowerCase() === 'order placed' ? 'pending' : order.status}
-                      </span>
+                      <StatusBadge status={order.status} />
                     </div>
                   </div>
                   <button

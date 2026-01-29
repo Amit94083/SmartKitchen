@@ -6,18 +6,22 @@ import { orderService } from "../services/api";
 import { imageMap } from "../assets/food/index";
 
 const ORDER_STEPS = [
-  { label: "Order Placed", key: "placed", icon: <Clock className="w-6 h-6" /> },
-  { label: "Confirmed", key: "confirmed", icon: <span className="w-6 h-6 flex items-center justify-center">✔️</span> },
-  { label: "Preparing", key: "preparing", icon: <span className="w-6 h-6 flex items-center justify-center">🥣</span> },
-  { label: "Ready", key: "ready", icon: <span className="w-6 h-6 flex items-center justify-center">📦</span> },
-  { label: "On the Way", key: "on_the_way", icon: <span className="w-6 h-6 flex items-center justify-center">🚴‍♂️</span> },
-  { label: "Delivered", key: "delivered", icon: <span className="w-6 h-6 flex items-center justify-center">🏠</span> },
+  { label: "Placed", key: "Placed", icon: <Clock className="w-6 h-6" /> },
+  { label: "Confirmed", key: "Confirmed", icon: <span className="w-6 h-6 flex items-center justify-center">✔️</span> },
+  { label: "Preparing", key: "Preparing", icon: <span className="w-6 h-6 flex items-center justify-center">🥣</span> },
+  { label: "Ready", key: "Ready", icon: <span className="w-6 h-6 flex items-center justify-center">📦</span> },
+  { label: "On the Way", key: "OnTheWay", icon: <span className="w-6 h-6 flex items-center justify-center">🚴‍♂️</span> },
+  { label: "Delivered", key: "Delivered", icon: <span className="w-6 h-6 flex items-center justify-center">🏠</span> },
 ];
 
 export default function OrderStatus() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
+  
+  const getDisplayStatus = (status) => {
+    return status === "Pending" ? "Placed" : status;
+  };
 
   useEffect(() => {
     async function fetchOrder() {
@@ -33,7 +37,8 @@ export default function OrderStatus() {
 
   if (!order) return <div>Loading...</div>;
 
-  const currentStep = ORDER_STEPS.findIndex(s => s.key === order.status);
+  const displayStatus = getDisplayStatus(order.status);
+  const currentStep = ORDER_STEPS.findIndex(s => s.key === displayStatus);
 
   // Calculate subtotal from order items
   const subtotal = order.orderItems
@@ -48,12 +53,12 @@ export default function OrderStatus() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-2 mb-2 relative">
-          <button onClick={() => navigate('/orders')} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&#8592;</button>
+          <button onClick={() => navigate('/customer/orders')} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&#8592;</button>
           <div>
             <div className="font-semibold text-lg">Order #{order.id}</div>
             <div className="text-gray-400 text-sm">{order.orderTime ? new Date(order.orderTime).toLocaleString() : ""}</div>
           </div>
-          <span className="ml-auto bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold capitalize">pending</span>
+          <span className="ml-auto bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold capitalize">{displayStatus}</span>
         </div>
         {/* Main Card */}
         <div className="bg-white rounded-2xl shadow p-6 mt-4">
@@ -61,17 +66,35 @@ export default function OrderStatus() {
           <p className="text-center text-gray-500 mb-6">Your order has been received and is being processed.</p>
           {/* Progress Tracker */}
           <div className="flex items-center justify-between mb-8">
-            {ORDER_STEPS.map((step, idx) => (
-              <div key={step.key} className="flex-1 flex flex-col items-center relative">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 border-2 ${idx === currentStep ? 'border-orange-500 bg-orange-100' : 'border-gray-200 bg-gray-50'}`}>
-                  {idx === currentStep ? <Clock className="w-6 h-6 text-orange-500" /> : step.icon}
+            {ORDER_STEPS.map((step, idx) => {
+              const isCompleted = idx < currentStep;
+              const isCurrent = idx === currentStep;
+              const isActive = isCompleted || isCurrent;
+              
+              return (
+                <div key={step.key} className="flex-1 flex flex-col items-center relative">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 border-2 ${
+                    isCompleted 
+                      ? 'border-green-500 bg-green-500' 
+                      : isCurrent 
+                        ? 'border-orange-500 bg-orange-100' 
+                        : 'border-gray-200 bg-gray-50'
+                  }`}>
+                    {isCompleted ? (
+                      <span className="text-white text-sm">✓</span>
+                    ) : isCurrent ? (
+                      <Clock className="w-6 h-6 text-orange-500" />
+                    ) : (
+                      step.icon
+                    )}
+                  </div>
+                  <div className={`text-xs ${isActive ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>{step.label}</div>
+                  {idx < ORDER_STEPS.length - 1 && (
+                    <div className={`absolute top-5 right-0 w-full h-0.5 z-0 ${isCompleted ? 'bg-green-500' : 'bg-gray-200'}`} style={{ left: '50%', right: '-50%' }}></div>
+                  )}
                 </div>
-                <div className={`text-xs ${idx === currentStep ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>{step.label}</div>
-                {idx < ORDER_STEPS.length - 1 && (
-                  <div className="absolute top-5 right-0 w-full h-0.5 bg-gray-200 z-0" style={{ left: '50%', right: '-50%' }}></div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
           {/* Estimated Delivery */}
           <div className="bg-orange-50 rounded-xl p-4 flex items-center gap-3 mb-8">
@@ -81,8 +104,8 @@ export default function OrderStatus() {
               <div className="font-bold text-lg text-orange-600">
                 {(() => {
                   // If delivered or cancelled, show status
-                  if (order.status && ["delivered", "cancelled"].includes(order.status.toLowerCase())) {
-                    return order.status.charAt(0).toUpperCase() + order.status.slice(1);
+                  if (displayStatus && ["Delivered", "Cancelled"].includes(displayStatus)) {
+                    return displayStatus;
                   }
                   // Otherwise, estimate from orderTime
                   if (order.orderTime) {

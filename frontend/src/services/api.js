@@ -85,8 +85,8 @@ export const orderService = {
     const response = await api.put(`/orders/${orderId}/status`, { status });
     return response.data;
   },
-  acceptOrderWithInventory: async (orderId) => {
-    const response = await api.put(`/orders/${orderId}/accept-with-inventory`);
+  acceptOrderAndUpdateInventory: async (orderId) => {
+    const response = await api.post(`/orders/${orderId}/update-inventory`);
     return response.data;
   },
 };
@@ -135,6 +135,10 @@ export const userService = {
   },
   addAddress: async (userId, addressData) => {
     const response = await api.post(`/user/${userId}/addresses`, addressData);
+    return response.data;
+  },
+  getDeliveryPartners: async () => {
+    const response = await api.get('/user/profile/by-type?userType=DELIVERY_PARTNER');
     return response.data;
   },
 };

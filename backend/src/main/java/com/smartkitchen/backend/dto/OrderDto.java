@@ -1,7 +1,8 @@
 package com.smartkitchen.backend.dto;
 
-import java.time.LocalDateTime;
 
+import com.smartkitchen.backend.entity.OrderStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -9,7 +10,7 @@ import java.util.List;
 public class OrderDto {
     private Long id;
     private LocalDateTime orderTime;
-    private String status;
+    private OrderStatus status;
     private Double totalAmount;
     private List<OrderItemDto> orderItems;
     private Long userId;
@@ -24,7 +25,7 @@ public class OrderDto {
 
     public OrderDto() {}
 
-    public OrderDto(Long id, LocalDateTime orderTime, String status, Double totalAmount, List<OrderItemDto> orderItems,
+    public OrderDto(Long id, LocalDateTime orderTime, OrderStatus status, Double totalAmount, List<OrderItemDto> orderItems,
                     String addressLabel, String addressFull, String addressApartment, String addressInstructions, String customerName, String customerPhone) {
         this.id = id;
         this.orderTime = orderTime;
@@ -40,7 +41,7 @@ public class OrderDto {
     }
 
     // Constructor without customerName (for POST response in OrderController)
-    public OrderDto(Long id, LocalDateTime orderTime, String status, Double totalAmount, List<OrderItemDto> orderItems,
+    public OrderDto(Long id, LocalDateTime orderTime, OrderStatus status, Double totalAmount, List<OrderItemDto> orderItems,
                     String addressLabel, String addressFull, String addressApartment, String addressInstructions) {
         this.id = id;
         this.orderTime = orderTime;
@@ -67,8 +68,8 @@ public class OrderDto {
     public LocalDateTime getOrderTime() { return orderTime; }
     public void setOrderTime(LocalDateTime orderTime) { this.orderTime = orderTime; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
 
     public Double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
@@ -90,7 +91,7 @@ public class OrderDto {
         return "OrderDto{" +
                 "id=" + id +
                 ", orderTime=" + orderTime +
-                ", status='" + status + '\'' +
+                ", status=" + status +
                 ", totalAmount=" + totalAmount +
                 ", orderItems=" + orderItems +
                 ", userId=" + userId +

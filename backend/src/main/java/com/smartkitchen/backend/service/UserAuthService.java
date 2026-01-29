@@ -82,7 +82,8 @@ public class UserAuthService {
             savedUser.getAddressLabel(),
             savedUser.getAddressFull(),
             savedUser.getAddressApartment(),
-            savedUser.getAddressInstructions()
+            savedUser.getAddressInstructions(),
+            savedUser.getCreatedAt()
         );
         
         return new AuthResponse(token, userDto, "User registered successfully");
@@ -120,7 +121,8 @@ public class UserAuthService {
             user.getAddressLabel(),
             user.getAddressFull(),
             user.getAddressApartment(),
-            user.getAddressInstructions()
+            user.getAddressInstructions(),
+            user.getCreatedAt()
         );
         
         return new AuthResponse(token, userDto, "Login successful");

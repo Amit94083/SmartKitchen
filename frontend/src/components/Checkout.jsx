@@ -119,6 +119,7 @@ export default function Checkout() {
         productName: item.menuItem?.name || item.name,
         quantity: item.quantity,
         price: item.menuItem?.price || item.price,
+        menuItemId: item.menuItem?.itemId || item.id 
       })),
     };
     try {

@@ -37,8 +37,8 @@ export default function AppHeader() {
           <Home className="w-5 h-5" /> Menu
         </button>
         <button
-          className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition ${isActive('/orders') ? 'bg-orange-100 text-orange-600' : 'text-gray-700 hover:bg-gray-100'}`}
-          onClick={() => navigate('/orders')}
+          className={`flex items-center gap-2 font-semibold text-base rounded-xl px-4 py-1.5 transition ${isActive('/customer/orders') ? 'bg-orange-100 text-orange-600' : 'text-gray-700 hover:bg-gray-100'}`}
+          onClick={() => navigate('/customer/orders')}
         >
           <Box className="w-5 h-5" /> Orders
         </button>

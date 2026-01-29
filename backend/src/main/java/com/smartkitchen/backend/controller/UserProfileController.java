@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user/profile")
@@ -52,7 +53,8 @@ public class UserProfileController {
                                 user.getAddressLabel(),
                                 user.getAddressFull(),
                                 user.getAddressApartment(),
-                                user.getAddressInstructions()
+                                user.getAddressInstructions(),
+                                user.getCreatedAt()
                 );
                 return ResponseEntity.ok(userDto);
         }
@@ -71,8 +73,35 @@ public class UserProfileController {
                 user.getAddressLabel(),
                 user.getAddressFull(),
                 user.getAddressApartment(),
-                user.getAddressInstructions()
+                user.getAddressInstructions(),
+                user.getCreatedAt()
             );
             return ResponseEntity.ok(userDto);
+        }
+
+        @GetMapping("/by-type")
+        public ResponseEntity<List<UserDto>> getUsersByType(@RequestParam String userType) {
+            try {
+                User.UserType type = User.UserType.valueOf(userType.toUpperCase());
+                List<User> users = userRepository.findByUserType(type);
+                List<UserDto> userDtos = users.stream()
+                    .map(user -> new UserDto(
+                        user.getId(),
+                        user.getName(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getUserType().toString(),
+                        user.getRestaurantName(),
+                        user.getAddressLabel(),
+                        user.getAddressFull(),
+                        user.getAddressApartment(),
+                        user.getAddressInstructions(),
+                        user.getCreatedAt()
+                    ))
+                    .collect(java.util.stream.Collectors.toList());
+                return ResponseEntity.ok(userDtos);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
+            }
         }
 }

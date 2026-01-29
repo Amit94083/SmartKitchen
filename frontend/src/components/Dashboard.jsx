@@ -287,19 +287,19 @@ const Dashboard = () => {
           {/* Orders */}
           <div className="flex-1">
             <div className="font-bold text-xl mb-4">Orders</div>
-            <div className="flex gap-2 mb-4">
-              {['All', 'Pending', 'Done', 'Cancel'].map(f => (
+            <div className="flex gap-2 mb-4 overflow-x-auto">
+              {['All', 'Placed', 'Confirmed', 'Preparing', 'Ready', 'OnTheWay', 'Delivered', 'Cancelled'].map(f => (
                 <button
                   key={f}
                   className={
                     (orderFilter === f
                       ? 'bg-orange-500 text-white font-semibold'
                       : 'bg-white text-gray-600') +
-                    ' px-4 py-1 rounded-lg'
+                    ' px-4 py-1 rounded-lg whitespace-nowrap'
                   }
                   onClick={() => setOrderFilter(f)}
                 >
-                  {f}
+                  {f === 'OnTheWay' ? 'On the Way' : f}
                 </button>
               ))}
             </div>
@@ -314,12 +314,20 @@ const Dashboard = () => {
             </div>
             {(() => {
               let filtered = periodOrders;
-              if (orderFilter === 'Pending') {
-                filtered = filtered.filter(o => o.status && (o.status.toLowerCase() === 'order placed' || o.status.toLowerCase() === 'pending'));
-              } else if (orderFilter === 'Done') {
-                filtered = filtered.filter(o => o.status && (o.status.toLowerCase() === 'delivered' || o.status.toLowerCase() === 'done'));
-              } else if (orderFilter === 'Cancel') {
-                filtered = filtered.filter(o => o.status && o.status.toLowerCase().includes('cancel'));
+              if (orderFilter === 'Placed') {
+                filtered = filtered.filter(o => o.status && o.status === 'Placed');
+              } else if (orderFilter === 'Confirmed') {
+                filtered = filtered.filter(o => o.status && o.status === 'Confirmed');
+              } else if (orderFilter === 'Preparing') {
+                filtered = filtered.filter(o => o.status && o.status === 'Preparing');
+              } else if (orderFilter === 'Ready') {
+                filtered = filtered.filter(o => o.status && o.status === 'Ready');
+              } else if (orderFilter === 'OnTheWay') {
+                filtered = filtered.filter(o => o.status && o.status === 'OnTheWay');
+              } else if (orderFilter === 'Delivered') {
+                filtered = filtered.filter(o => o.status && o.status === 'Delivered');
+              } else if (orderFilter === 'Cancelled') {
+                filtered = filtered.filter(o => o.status && o.status === 'Cancelled');
               }
               if (orderSearch.trim() !== '') {
                 const q = orderSearch.trim().toLowerCase();

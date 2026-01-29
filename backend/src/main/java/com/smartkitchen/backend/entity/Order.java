@@ -1,3 +1,4 @@
+
 package com.smartkitchen.backend.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -32,8 +33,9 @@ public class Order {
     @Column(name = "order_time", nullable = false)
     private LocalDateTime orderTime;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private OrderStatus status;
 
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
@@ -77,8 +79,8 @@ public class Order {
     public LocalDateTime getOrderTime() { return orderTime; }
     public void setOrderTime(LocalDateTime orderTime) { this.orderTime = orderTime; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
 
     public Double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }

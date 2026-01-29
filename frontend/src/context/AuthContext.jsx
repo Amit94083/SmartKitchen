@@ -39,11 +39,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const clearStorageAndReload = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const value = {
     user,
     token,
     login,
     logout,
+    clearStorageAndReload,
     isAuthenticated: !!token && !!user,
     isCustomer: user?.userType === 'CUSTOMER',
     isRestaurantOwner: user?.userType === 'RESTAURANT_OWNER',
