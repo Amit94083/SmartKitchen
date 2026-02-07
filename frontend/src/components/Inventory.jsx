@@ -23,6 +23,15 @@ const Inventory = () => {
     isActive: true
   });
 
+  // Helper function to format numbers to max 2 decimal places
+  const formatQuantity = (value) => {
+    if (value === null || value === undefined || value === '') return '0';
+    const num = parseFloat(value);
+    if (isNaN(num)) return '0';
+    // Round to 2 decimal places and remove trailing zeros
+    return Number(num.toFixed(2)).toString();
+  };
+
   // Get unique ingredient types for filter buttons, sorted alphabetically, 'Other' last
   let ingredientTypes = Array.from(new Set(ingredients.map(i => i.ingredientType))).filter(Boolean);
   ingredientTypes = ingredientTypes.sort((a, b) => {
@@ -302,7 +311,7 @@ const Inventory = () => {
                         <span className={`${status.color} text-xs px-2 py-1 rounded-full`}>{status.label}</span>
                       </div>
                       <div className="font-bold text-lg mb-1">{ingredient.name}</div>
-                      <div className="text-2xl font-bold mb-1">{ingredient.currentQuantity} <span className="text-sm font-normal">{ingredient.unit}</span></div>
+                      <div className="text-2xl font-bold mb-1">{formatQuantity(ingredient.currentQuantity)} <span className="text-sm font-normal">{ingredient.unit}</span></div>
                       <div className="flex justify-between items-center mb-1">
                         <div className="text-xs text-gray-500">Stock Level</div>
                         <div className="text-xs text-gray-500 font-semibold">{percent}%</div>
@@ -492,12 +501,12 @@ const Inventory = () => {
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-orange-300"
                           value={formData.maxQuantity}
                           onChange={(e) => setFormData({...formData, maxQuantity: e.target.value})}
-                          placeholder={selectedIngredient ? `Current: ${selectedIngredient.maxQuantity}` : 'Enter max quantity'}
+                          placeholder={selectedIngredient ? `Current: ${formatQuantity(selectedIngredient.maxQuantity)}` : 'Enter max quantity'}
                         />
                         {selectedIngredient && (
                           <div className="mt-1 text-xs text-gray-500 flex items-center gap-1">
                             <AlertCircle className="w-3 h-3" />
-                            Current max: {selectedIngredient.maxQuantity} {selectedIngredient.unit}
+                            Current max: {formatQuantity(selectedIngredient.maxQuantity)} {selectedIngredient.unit}
                           </div>
                         )}
                       </div>
@@ -516,12 +525,12 @@ const Inventory = () => {
                         value={formData.currentQuantity}
                         onChange={(e) => setFormData({...formData, currentQuantity: e.target.value})}
                         required
-                        placeholder={modalTab === 'update' && selectedIngredient ? `Current: ${selectedIngredient.currentQuantity}` : 'Enter quantity'}
+                        placeholder={modalTab === 'update' && selectedIngredient ? `Current: ${formatQuantity(selectedIngredient.currentQuantity)}` : 'Enter quantity'}
                       />
                       {modalTab === 'update' && selectedIngredient && (
                         <div className="mt-1 text-xs text-gray-500 flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
-                          Current stock: {selectedIngredient.currentQuantity} {selectedIngredient.unit}
+                          Current stock: {formatQuantity(selectedIngredient.currentQuantity)} {selectedIngredient.unit}
                         </div>
                       )}
                     </div>
@@ -539,12 +548,12 @@ const Inventory = () => {
                         value={formData.thresholdQuantity}
                         onChange={(e) => setFormData({...formData, thresholdQuantity: e.target.value})}
                         required
-                        placeholder={modalTab === 'update' && selectedIngredient ? `Current: ${selectedIngredient.thresholdQuantity}` : 'Min stock level'}
+                        placeholder={modalTab === 'update' && selectedIngredient ? `Current: ${formatQuantity(selectedIngredient.thresholdQuantity)}` : 'Min stock level'}
                       />
                       {modalTab === 'update' && selectedIngredient && (
                         <div className="mt-1 text-xs text-gray-500 flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
-                          Current threshold: {selectedIngredient.thresholdQuantity} {selectedIngredient.unit}
+                          Current threshold: {formatQuantity(selectedIngredient.thresholdQuantity)} {selectedIngredient.unit}
                         </div>
                       )}
                     </div>
