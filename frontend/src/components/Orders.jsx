@@ -132,7 +132,15 @@ export default function Orders() {
                       <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center border" />
                     )}
                     <div className="flex-1">
-                      <div className="text-gray-500 text-base font-medium mb-1">{formatDate(order.orderTime)}</div>
+                      <div className="text-gray-500 text-base font-medium mb-1">
+                        {order.status === 'Delivered' && order.deliveredAt ? (
+                          <span>
+                            <span className="text-green-600 font-medium">Delivered:</span> {formatDate(order.deliveredAt)}
+                          </span>
+                        ) : (
+                          formatDate(order.orderTime)
+                        )}
+                      </div>
                       <div className="font-semibold text-lg mb-1">{order.orderItems?.length || 0} item{order.orderItems?.length === 1 ? "" : "s"} • ₹{order.totalAmount}</div>
                     </div>
                     <div className="absolute right-0 top-0">

@@ -10,6 +10,7 @@ const ORDER_STEPS = [
   { label: "Confirmed", key: "Confirmed", icon: <span className="w-6 h-6 flex items-center justify-center">✔️</span> },
   { label: "Preparing", key: "Preparing", icon: <span className="w-6 h-6 flex items-center justify-center">🥣</span> },
   { label: "Ready", key: "Ready", icon: <span className="w-6 h-6 flex items-center justify-center">📦</span> },
+  { label: "Assigned", key: "Assigned", icon: <span className="w-6 h-6 flex items-center justify-center">🎯</span> },
   { label: "On the Way", key: "OnTheWay", icon: <span className="w-6 h-6 flex items-center justify-center">🚴‍♂️</span> },
   { label: "Delivered", key: "Delivered", icon: <span className="w-6 h-6 flex items-center justify-center">🏠</span> },
 ];
@@ -56,7 +57,15 @@ export default function OrderStatus() {
           <button onClick={() => navigate('/customer/orders')} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&#8592;</button>
           <div>
             <div className="font-semibold text-lg">Order #{order.id}</div>
-            <div className="text-gray-400 text-sm">{order.orderTime ? new Date(order.orderTime).toLocaleString() : ""}</div>
+            <div className="text-gray-400 text-sm">
+              {displayStatus === 'Delivered' && order.deliveredAt ? (
+                <span>
+                  <span className="text-green-600 font-medium">Delivered:</span> {new Date(order.deliveredAt).toLocaleString()}
+                </span>
+              ) : (
+                order.orderTime ? new Date(order.orderTime).toLocaleString() : ""
+              )}
+            </div>
           </div>
           <span className="ml-auto bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold capitalize">{displayStatus}</span>
         </div>

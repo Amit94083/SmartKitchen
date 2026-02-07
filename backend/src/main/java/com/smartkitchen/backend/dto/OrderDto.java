@@ -16,6 +16,9 @@ public class OrderDto {
     private Long userId;
     private String customerName;
     private String customerPhone;
+    private Long deliveryPartnerId;
+    private LocalDateTime assignedAt;
+    private LocalDateTime deliveredAt;
 
     // Address fields
     private String addressLabel;
@@ -26,7 +29,7 @@ public class OrderDto {
     public OrderDto() {}
 
     public OrderDto(Long id, LocalDateTime orderTime, OrderStatus status, Double totalAmount, List<OrderItemDto> orderItems,
-                    String addressLabel, String addressFull, String addressApartment, String addressInstructions, String customerName, String customerPhone) {
+                    String addressLabel, String addressFull, String addressApartment, String addressInstructions, String customerName, String customerPhone, Long deliveryPartnerId, LocalDateTime assignedAt, LocalDateTime deliveredAt) {
         this.id = id;
         this.orderTime = orderTime;
         this.status = status;
@@ -38,9 +41,28 @@ public class OrderDto {
         this.addressInstructions = addressInstructions;
         this.customerName = customerName;
         this.customerPhone = customerPhone;
+        this.deliveryPartnerId = deliveryPartnerId;
+        this.assignedAt = assignedAt;
+        this.deliveredAt = deliveredAt;
     }
 
     // Constructor without customerName (for POST response in OrderController)
+    public OrderDto(Long id, LocalDateTime orderTime, OrderStatus status, Double totalAmount, List<OrderItemDto> orderItems,
+                    String addressLabel, String addressFull, String addressApartment, String addressInstructions, LocalDateTime assignedAt, LocalDateTime deliveredAt) {
+        this.id = id;
+        this.orderTime = orderTime;
+        this.status = status;
+        this.totalAmount = totalAmount;
+        this.orderItems = orderItems;
+        this.addressLabel = addressLabel;
+        this.addressFull = addressFull;
+        this.addressApartment = addressApartment;
+        this.addressInstructions = addressInstructions;
+        this.assignedAt = assignedAt;
+        this.deliveredAt = deliveredAt;
+    }
+
+    // Constructor without customerName and assignedAt (for legacy compatibility)
     public OrderDto(Long id, LocalDateTime orderTime, OrderStatus status, Double totalAmount, List<OrderItemDto> orderItems,
                     String addressLabel, String addressFull, String addressApartment, String addressInstructions) {
         this.id = id;
@@ -85,6 +107,15 @@ public class OrderDto {
     public void setAddressApartment(String addressApartment) { this.addressApartment = addressApartment; }
     public String getAddressInstructions() { return addressInstructions; }
     public void setAddressInstructions(String addressInstructions) { this.addressInstructions = addressInstructions; }
+
+    public Long getDeliveryPartnerId() { return deliveryPartnerId; }
+    public void setDeliveryPartnerId(Long deliveryPartnerId) { this.deliveryPartnerId = deliveryPartnerId; }
+
+    public LocalDateTime getAssignedAt() { return assignedAt; }
+    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
 
     @Override
     public String toString() {

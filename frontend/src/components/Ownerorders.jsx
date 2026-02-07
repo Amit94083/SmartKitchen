@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Package, Clock, CheckCircle, Truck, X, Check, User } from 'lucide-react';
+import { Search, Bell, Package, Clock, CheckCircle, Truck, X, Check, User, UserCheck } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { orderService } from '../services/api';
 
 const Ownerorders = () => {
-  const [activeTab, setActiveTab] = useState(() => {
-    // Initialize from localStorage, fallback to 'all'
-    return localStorage.getItem('ownerOrdersActiveTab') || 'all';
-  });
+  const [activeTab, setActiveTab] = useState('all'); // Always start with 'all' tab
   const [searchQuery, setSearchQuery] = useState('');
-  const [period, setPeriod] = useState('Today');
+  const [period, setPeriod] = useState('All Time');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // Function to update active tab and save to localStorage
+  // Function to update active tab (removed localStorage persistence)
   const updateActiveTab = (tabKey) => {
     setActiveTab(tabKey);
-    localStorage.setItem('ownerOrdersActiveTab', tabKey);
   };
 
   // Fetch orders from backend
@@ -211,11 +207,11 @@ const Ownerorders = () => {
   // Assign delivery partner handler
   const handleAssignDelivery = async (order) => {
     try {
-      // Redirect to delivery dashboard for assignment
-      window.location.href = '/delivery/dashboard';
+      // Redirect to delivery assign orders page for assignment
+      window.location.href = '/delivery/assign-orders';
     } catch (err) {
-      console.error('Error redirecting to delivery dashboard:', err);
-      alert('Failed to redirect to delivery dashboard. Please try again.');
+      console.error('Error redirecting to delivery assign orders page:', err);
+      alert('Failed to redirect to delivery assign orders page. Please try again.');
     }
   };
 
@@ -225,6 +221,7 @@ const Ownerorders = () => {
     { key: 'Confirmed', label: 'Confirmed', count: transformedOrders.filter(o => o.status === 'Confirmed').length, icon: CheckCircle },
     { key: 'Preparing', label: 'Preparing', count: transformedOrders.filter(o => o.status === 'Preparing').length, icon: Truck },
     { key: 'Ready', label: 'Ready', count: transformedOrders.filter(o => o.status === 'Ready').length, icon: Truck },
+    { key: 'Assigned', label: 'Assigned', count: transformedOrders.filter(o => o.status === 'Assigned').length, icon: UserCheck },
     { key: 'OnTheWay', label: 'On the Way', count: transformedOrders.filter(o => o.status === 'OnTheWay').length, icon: Truck },
     { key: 'Delivered', label: 'Delivered', count: transformedOrders.filter(o => o.status === 'Delivered').length, icon: Check },
     { key: 'Cancelled', label: 'Cancelled', count: transformedOrders.filter(o => o.status === 'Cancelled').length, icon: X }
@@ -237,6 +234,7 @@ const Ownerorders = () => {
       Confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
       Preparing: 'bg-blue-100 text-blue-800 border-blue-200',
       Ready: 'bg-green-100 text-green-800 border-green-200',
+      Assigned: 'bg-purple-100 text-purple-800 border-purple-200',
       OnTheWay: 'bg-orange-100 text-orange-800 border-orange-200',
       Delivered: 'bg-gray-100 text-gray-800 border-gray-200',
       Cancelled: 'bg-red-100 text-red-800 border-red-200'
@@ -247,6 +245,7 @@ const Ownerorders = () => {
       Confirmed: 'Confirmed',
       Preparing: 'Preparing',
       Ready: 'Ready',
+      Assigned: 'Assigned',
       OnTheWay: 'On the Way',
       Delivered: 'Delivered',
       Cancelled: 'Cancelled'
@@ -273,7 +272,7 @@ const Ownerorders = () => {
           <div className="flex items-center gap-2">
             {/* Period Filter */}
             <div className="flex gap-1 bg-white rounded-lg shadow px-1 py-0.5">
-              {['Today', 'This Week', 'This Month'].map(p => (
+              {['All Time', 'Today', 'This Week', 'This Month'].map(p => (
                 <button
                   key={p}
                   className={
@@ -405,7 +404,7 @@ const Ownerorders = () => {
                   </div>
                   {/* Right: Action Buttons */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {activeTab === 'Placed' && order.status === 'Placed' ? (
+                    {order.status === 'Placed' ? (
                       <>
                         <button
                           className="flex items-center gap-1 px-2 py-1 border border-red-300 text-red-600 bg-white rounded text-xs font-medium hover:bg-red-50 transition"
@@ -422,7 +421,7 @@ const Ownerorders = () => {
                           Accept
                         </button>
                       </>
-                    ) : activeTab === 'Confirmed' && order.status === 'Confirmed' ? (
+                    ) : order.status === 'Confirmed' ? (
                       <button
                         className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded text-xs font-medium hover:bg-blue-600 transition"
                         onClick={() => handleStartPreparing(order)}
@@ -430,7 +429,7 @@ const Ownerorders = () => {
                         <Package className="w-3 h-3" />
                         Start Preparing
                       </button>
-                    ) : activeTab === 'Preparing' && order.status === 'Preparing' ? (
+                    ) : order.status === 'Preparing' ? (
                       <button
                         className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded text-xs font-medium hover:bg-green-600 transition"
                         onClick={() => handleReady(order)}
@@ -438,7 +437,7 @@ const Ownerorders = () => {
                         <Check className="w-3 h-3" />
                         Mark Ready
                       </button>
-                    ) : activeTab === 'Ready' && order.status === 'Ready' ? (
+                    ) : order.status === 'Ready' ? (
                       <button
                         className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded text-xs font-medium hover:bg-orange-600 transition"
                         onClick={() => handleAssignDelivery(order)}

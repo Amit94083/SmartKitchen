@@ -10,7 +10,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [orderFilter, setOrderFilter] = useState('All');
   const [orderSearch, setOrderSearch] = useState('');
-  const [period, setPeriod] = useState('Today');
+  const [period, setPeriod] = useState('All Time');
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
@@ -157,7 +157,7 @@ const Dashboard = () => {
         createdByOwnerId: ownerId,
       };
       await menuService.createMenuItem(menuItemData);
-      alert('Menu item added successfully!');
+      //alert('Menu item added successfully!');
       setShowAddItemDialog(false);
       setShowCustomCategory(false);
       setCustomCategory('');
@@ -202,7 +202,7 @@ const Dashboard = () => {
             <p className="text-gray-500 mt-1">Welcome back! Here's what's happening today.</p>
           </div>
           <div className="flex gap-2 bg-white rounded-xl shadow px-2 py-1">
-            {['Today', 'This Week', 'This Month'].map(p => (
+            {['All Time', 'Today', 'This Week', 'This Month'].map(p => (
               <button
                 key={p}
                 className={
@@ -255,7 +255,7 @@ const Dashboard = () => {
             <div className="text-4xl font-bold mb-1">
               ₹{
                 periodOrders
-                  .filter(o => o.status && (o.status.toLowerCase() === 'delivered' || o.status.toLowerCase() === 'done'))
+                  .filter(o => o.status && (o.status === 'Delivered'))
                   .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
               }
             </div>

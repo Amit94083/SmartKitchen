@@ -63,6 +63,9 @@ public class User {
     @Column(name = "address_instructions")
     private String addressInstructions;
     
+    @Column(name = "is_active", nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
+    private Boolean isActive = true;
+    
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
@@ -74,6 +77,9 @@ public class User {
         LocalDateTime now = LocalDateTime.now();
         createdAt = now;
         lastModifiedAt = now;
+        if (isActive == null) {
+            isActive = true;
+        }
     }
 
     @PreUpdate
@@ -203,6 +209,14 @@ public class User {
     
     public void setLastModifiedAt(LocalDateTime lastModifiedAt) {
         this.lastModifiedAt = lastModifiedAt;
+    }
+    
+    public Boolean getIsActive() {
+        return isActive;
+    }
+    
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
     
     // Helper methods

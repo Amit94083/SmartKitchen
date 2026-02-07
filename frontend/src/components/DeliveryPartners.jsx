@@ -9,6 +9,8 @@ const DeliveryPartners = () => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState(null);
 
   // Fetch delivery partners from backend
   useEffect(() => {
@@ -22,14 +24,19 @@ const DeliveryPartners = () => {
           name: user.name || 'Unknown',
           phone: user.phone || 'Not provided',
           email: user.email || 'Not provided',
-          status: user.isActive !== false ? 'Active' : 'Inactive', // Default to active if not specified
-          rating: user.rating || 4.5, // Default rating if not available
+          status: user.isActive !== false ? 'Active' : 'Inactive', 
+          rating: user.rating || 4.5, 
           totalDeliveries: user.totalDeliveries || 0,
           joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US') : new Date().toLocaleDateString('en-US'),
-          currentLocation: user.addressFull || user.addressLabel || 'Location not set',
+          // Properly format address combining both fields
+          currentLocation: [user.addressApartment, user.addressFull]
+            .filter(field => field && field.trim()) 
+            .join(', ') || 'Address not provided',
           addressFull: user.addressFull,
+          addressApartment: user.addressApartment,
           addressLabel: user.addressLabel,
-          userType: user.userType
+          userType: user.userType,
+          isActive: user.isActive 
         }));
         setPartners(transformedPartners);
         setError(null);
@@ -57,13 +64,28 @@ const DeliveryPartners = () => {
 
   const handleStatusUpdate = async (partnerId, newStatus) => {
     try {
-      // Replace with actual API call
+      const isActive = newStatus === 'Active';
+      await userService.updateUserStatus(partnerId, isActive);
+      
+      // Update local state
       setPartners(partners.map(partner => 
-        partner.id === partnerId ? { ...partner, status: newStatus } : partner
+        partner.id === partnerId ? { ...partner, status: newStatus, isActive: isActive } : partner
       ));
     } catch (error) {
       console.error('Error updating partner status:', error);
+      // Optionally show error message to user
+      setError('Failed to update partner status. Please try again.');
     }
+  };
+
+  const handleViewDetails = (partner) => {
+    setSelectedPartner(partner);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedPartner(null);
   };
 
   return (
@@ -197,7 +219,10 @@ const DeliveryPartners = () => {
                       Activate
                     </button>
                   )}
-                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button 
+                    onClick={() => handleViewDetails(partner)}
+                    className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
                     View Details
                   </button>
                 </div>
@@ -206,6 +231,178 @@ const DeliveryPartners = () => {
           </div>
         )}
       </main>
+      
+      {/* Details Modal */}
+      {showDetailsModal && selectedPartner && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Delivery Partner Details</h2>
+              <button
+                onClick={closeDetailsModal}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Partner Header */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                  <User className="w-8 h-8 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{selectedPartner.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedPartner.status === 'Active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {selectedPartner.status}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span className="text-sm text-gray-600">{selectedPartner.rating}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Contact Information */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-700">{selectedPartner.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 7.89a1 1 0 001.42 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-sm text-gray-700">{selectedPartner.email}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Address Information */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Address Information</h4>
+                  <div className="space-y-2">
+                    {selectedPartner.addressLabel && (
+                      <div>
+                        <span className="text-xs text-gray-500 uppercase tracking-wide">Label</span>
+                        <p className="text-sm text-gray-700">{selectedPartner.addressLabel}</p>
+                      </div>
+                    )}
+                    {selectedPartner.addressApartment && (
+                      <div>
+                        <span className="text-xs text-gray-500 uppercase tracking-wide">Apartment/Unit</span>
+                        <p className="text-sm text-gray-700">{selectedPartner.addressApartment}</p>
+                      </div>
+                    )}
+                    {selectedPartner.addressFull && (
+                      <div>
+                        <span className="text-xs text-gray-500 uppercase tracking-wide">Full Address</span>
+                        <p className="text-sm text-gray-700">{selectedPartner.addressFull}</p>
+                      </div>
+                    )}
+                    {!selectedPartner.addressLabel && !selectedPartner.addressApartment && !selectedPartner.addressFull && (
+                      <p className="text-sm text-gray-500">No address information provided</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Performance Stats */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Performance</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Total Deliveries</span>
+                      <span className="font-medium text-gray-900">{selectedPartner.totalDeliveries}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Average Rating</span>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                        <span className="font-medium text-gray-900">{selectedPartner.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Account Information */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Account Information</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">User ID</span>
+                      <span className="font-medium text-gray-900">#{selectedPartner.id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">User Type</span>
+                      <span className="font-medium text-gray-900">{selectedPartner.userType}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Join Date</span>
+                      <span className="font-medium text-gray-900">{selectedPartner.joinDate}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Status</span>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        selectedPartner.status === 'Active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {selectedPartner.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                {selectedPartner.status === 'Active' ? (
+                  <button
+                    onClick={() => {
+                      handleStatusUpdate(selectedPartner.id, 'Inactive');
+                      closeDetailsModal();
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    Deactivate Partner
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      handleStatusUpdate(selectedPartner.id, 'Active');
+                      closeDetailsModal();
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    <Check className="w-4 h-4" />
+                    Activate Partner
+                  </button>
+                )}
+                <button
+                  onClick={closeDetailsModal}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

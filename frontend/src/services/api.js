@@ -89,6 +89,10 @@ export const orderService = {
     const response = await api.post(`/orders/${orderId}/update-inventory`);
     return response.data;
   },
+  assignDeliveryPartner: async (orderId, partnerId) => {
+    const response = await api.put(`/orders/${orderId}/assign-partner`, { partnerId });
+    return response.data;
+  },
 };
 export const cartService = {
   addToCart: async (userId, menuItemId, quantity = 1) => {
@@ -141,6 +145,10 @@ export const userService = {
     const response = await api.get('/user/profile/by-type?userType=DELIVERY_PARTNER');
     return response.data;
   },
+  updateUserStatus: async (userId, isActive) => {
+    const response = await api.put(`/user/profile/${userId}/status`, { isActive });
+    return response.data;
+  },
 };
 import axios from 'axios';
 
@@ -171,6 +179,11 @@ export const authService = {
 
   signup: async (data) => {
     const response = await api.post('/user/auth/signup', data);
+    return response.data;
+  },
+
+  getUserById: async (userId) => {
+    const response = await api.get(`/user/profile/${userId}`);
     return response.data;
   },
 

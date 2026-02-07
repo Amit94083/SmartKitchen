@@ -6,7 +6,8 @@ public enum OrderStatus {
     Confirmed,     // Confirmed
     Preparing,     // 🥣
     Ready,         // Ready
-    OnTheWay,      // 🚴‍♂️
+    Assigned,      // 📋 Assigned to delivery partner
+    OnTheWay,      // 🚴‍♂️ Partner picked up and on the way
     Delivered,     // 🏠
     Cancelled      // ❌
 }

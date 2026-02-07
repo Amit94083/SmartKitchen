@@ -23,11 +23,17 @@ public class UserSignupRequest {
     private String phone;
     
     @NotBlank(message = "User type is required")
-    private String userType; // "CUSTOMER" or "RESTAURANT_OWNER"
+    private String userType; 
     
     // For restaurant owners
     @Size(max = 255, message = "Restaurant name must be less than 255 characters")
     private String restaurantName;
+    
+    // Address fields
+    private String addressLabel;
+    private String addressFull;
+    private String addressApartment;
+    private String addressInstructions;
     
     public UserSignupRequest() {}
     
@@ -87,5 +93,38 @@ public class UserSignupRequest {
     
     public void setRestaurantName(String restaurantName) {
         this.restaurantName = restaurantName;
+    }
+    
+    // Address field getters and setters
+    public String getAddressLabel() {
+        return addressLabel;
+    }
+    
+    public void setAddressLabel(String addressLabel) {
+        this.addressLabel = addressLabel;
+    }
+    
+    public String getAddressFull() {
+        return addressFull;
+    }
+    
+    public void setAddressFull(String addressFull) {
+        this.addressFull = addressFull;
+    }
+    
+    public String getAddressApartment() {
+        return addressApartment;
+    }
+    
+    public void setAddressApartment(String addressApartment) {
+        this.addressApartment = addressApartment;
+    }
+    
+    public String getAddressInstructions() {
+        return addressInstructions;
+    }
+    
+    public void setAddressInstructions(String addressInstructions) {
+        this.addressInstructions = addressInstructions;
     }
 }

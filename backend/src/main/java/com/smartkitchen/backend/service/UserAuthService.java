@@ -26,12 +26,10 @@ public class UserAuthService {
     private RestaurantRepository restaurantRepository;
     
     public AuthResponse signup(UserSignupRequest signupRequest) {
-        // Check if user already exists
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw new RuntimeException("Email is already registered");
         }
         
-        // Validate user type
         User.UserType userType;
         try {
             userType = User.UserType.valueOf(signupRequest.getUserType().toUpperCase());
@@ -39,19 +37,21 @@ public class UserAuthService {
             throw new RuntimeException("Invalid user type. Must be CUSTOMER or RESTAURANT_OWNER");
         }
         
-        // Validate restaurant name for restaurant owners
         if (userType == User.UserType.RESTAURANT_OWNER && 
             (signupRequest.getRestaurantName() == null || signupRequest.getRestaurantName().trim().isEmpty())) {
             throw new RuntimeException("Restaurant name is required for restaurant owners");
         }
         
-        // Create new user
         User user = new User();
         user.setName(signupRequest.getName());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         user.setPhone(signupRequest.getPhone());
         user.setUserType(userType);
+        user.setAddressLabel(signupRequest.getAddressLabel());
+        user.setAddressFull(signupRequest.getAddressFull());
+        user.setAddressApartment(signupRequest.getAddressApartment());
+        user.setAddressInstructions(signupRequest.getAddressInstructions());
         
         if (userType == User.UserType.RESTAURANT_OWNER) {
             user.setRestaurantName(signupRequest.getRestaurantName());
@@ -59,7 +59,6 @@ public class UserAuthService {
         
         User savedUser = userRepository.save(user);
 
-        // Automatically create a Restaurant entry for new restaurant owners
         if (userType == User.UserType.RESTAURANT_OWNER) {
             Restaurant restaurant = new Restaurant();
             restaurant.setName(signupRequest.getRestaurantName());
@@ -68,10 +67,8 @@ public class UserAuthService {
             restaurantRepository.save(restaurant);
         }
 
-        // Generate JWT token
         String token = jwtTokenProvider.generateToken(savedUser.getEmail(), savedUser.getUserType().toString());
         
-        // Create UserDto
         UserDto userDto = new UserDto(
             savedUser.getId(),
             savedUser.getName(),
@@ -83,6 +80,7 @@ public class UserAuthService {
             savedUser.getAddressFull(),
             savedUser.getAddressApartment(),
             savedUser.getAddressInstructions(),
+            savedUser.getIsActive(),
             savedUser.getCreatedAt()
         );
         
@@ -90,7 +88,6 @@ public class UserAuthService {
     }
     
     public AuthResponse login(UserLoginRequest loginRequest) {
-        // Validate user type
         User.UserType userType;
         try {
             userType = User.UserType.valueOf(loginRequest.getUserType().toUpperCase());
@@ -98,19 +95,15 @@ public class UserAuthService {
             throw new RuntimeException("Invalid user type. Must be CUSTOMER or RESTAURANT_OWNER");
         }
         
-        // Find user by email and user type
         User user = userRepository.findByEmailAndUserType(loginRequest.getEmail(), userType)
             .orElseThrow(() -> new RuntimeException("Invalid credentials or user type"));
         
-        // Check password
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
         
-        // Generate JWT token
         String token = jwtTokenProvider.generateToken(user.getEmail(), user.getUserType().toString());
         
-        // Create UserDto
         UserDto userDto = new UserDto(
             user.getId(),
             user.getName(),
@@ -122,6 +115,7 @@ public class UserAuthService {
             user.getAddressFull(),
             user.getAddressApartment(),
             user.getAddressInstructions(),
+            user.getIsActive(),
             user.getCreatedAt()
         );
         

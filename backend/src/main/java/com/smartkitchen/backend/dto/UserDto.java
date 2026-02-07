@@ -9,6 +9,7 @@ public class UserDto {
     private String phone;
     private String userType;
     private String restaurantName; // Only for restaurant owners
+    private Boolean isActive;
     private LocalDateTime createdAt; // Join date
 
     // Address fields
@@ -20,7 +21,7 @@ public class UserDto {
     public UserDto() {}
 
     public UserDto(Long id, String name, String email, String phone, String userType, String restaurantName,
-                   String addressLabel, String addressFull, String addressApartment, String addressInstructions, LocalDateTime createdAt) {
+                   String addressLabel, String addressFull, String addressApartment, String addressInstructions, Boolean isActive, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -31,6 +32,7 @@ public class UserDto {
         this.addressFull = addressFull;
         this.addressApartment = addressApartment;
         this.addressInstructions = addressInstructions;
+        this.isActive = isActive;
         this.createdAt = createdAt;
     }
         public String getAddressLabel() {
@@ -113,5 +115,13 @@ public class UserDto {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public Boolean getIsActive() {
+        return isActive;
+    }
+    
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }

@@ -22,8 +22,9 @@ import Restaurant from './components/Restaurant';
 import Checkout from './components/Checkout';
 import OrderStatus from './components/OrderStatus';
 import DeliveryDashboard from './components/DeliveryDashboard';
+import DeliveryPartnerHome from './components/DeliveryPartnerHome';
 import DeliveryPartners from './components/DeliveryPartners';
-import DeliveryOrders from './components/DeliveryOrders';
+import AssignOrders from './components/AssignOrders';
 
 const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth();
@@ -32,6 +33,7 @@ const AppRoutes = () => {
     if (!isAuthenticated) return '/';
     if (user?.userType === 'RESTAURANT_OWNER') return '/restaurant-dashboard';
     if (user?.userType === 'CUSTOMER') return '/home';
+    if (user?.userType === 'DELIVERY_PARTNER') return `/delivery-partner/home/${user.id}`;
     return '/';
   };
 
@@ -149,6 +151,12 @@ const AppRoutes = () => {
         }
       />
 
+      {/* Delivery Partner Home */}
+      <Route
+        path="/delivery-partner/home/:userId"
+        element={<DeliveryPartnerHome />}
+      />
+      
       {/* Delivery Boy Dashboard */}
       <Route
         path="/delivery/dashboard"
@@ -161,10 +169,10 @@ const AppRoutes = () => {
         element={<DeliveryPartners />}
       />
       
-      {/* Delivery Orders */}
+      {/* Assign Orders */}
       <Route
-        path="/delivery/orders"
-        element={<DeliveryOrders />}
+        path="/delivery/assign-orders"
+        element={<AssignOrders />}
       />
 
       {/* Profile Page */}

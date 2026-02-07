@@ -13,6 +13,7 @@ import com.smartkitchen.backend.repository.UserRepository;
 import com.smartkitchen.backend.repository.RecipeRepository;
 import com.smartkitchen.backend.repository.IngredientRepository;
 import com.smartkitchen.backend.repository.MenuItemRepository;
+import java.time.LocalDateTime;
 import com.smartkitchen.backend.repository.OrderItemRepository;
 import com.smartkitchen.backend.entity.OrderItem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,7 +128,10 @@ public class OrderController {
                 o.getAddressApartment(),
                 o.getAddressInstructions(),
                 customerName,
-                customerPhone
+                customerPhone,
+                o.getDeliveryPartnerId(),
+                o.getAssignedAt(),
+                o.getDeliveredAt()
             );
         }).collect(Collectors.toList());
         logger.info("GET /api/orders response: {}", dtos);
@@ -221,7 +225,9 @@ public class OrderController {
             saved.getAddressLabel(),
             saved.getAddressFull(),
             saved.getAddressApartment(),
-            saved.getAddressInstructions()
+            saved.getAddressInstructions(),
+            saved.getAssignedAt(),
+            saved.getDeliveredAt()
         );
         logger.info("POST /api/orders response: {}", responseDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
@@ -265,7 +271,10 @@ public class OrderController {
             order.getAddressApartment(),
             order.getAddressInstructions(),
             customerName,
-            customerPhone
+            customerPhone,
+            order.getDeliveryPartnerId(),
+            order.getAssignedAt(),
+            order.getDeliveredAt()
         );
         logger.info("GET /api/orders/{} response: {}", id, responseDto);
         return ResponseEntity.ok(responseDto);
@@ -307,7 +316,10 @@ public class OrderController {
                 o.getAddressApartment(),
                 o.getAddressInstructions(),
                 customerName,
-                customerPhone
+                customerPhone,
+                o.getDeliveryPartnerId(),
+                o.getAssignedAt(),
+                o.getDeliveredAt()
             );
         }).collect(Collectors.toList());
         logger.info("GET /api/orders/my/{} response: {}", userId, dtos);
@@ -325,12 +337,51 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
         }
         try {
-            order.setStatus(OrderStatus.valueOf(statusUpdateRequest.getStatus()));
+            OrderStatus newStatus = OrderStatus.valueOf(statusUpdateRequest.getStatus());
+            order.setStatus(newStatus);
+            
+            // Set delivered_at timestamp when order is marked as delivered
+            if (newStatus == OrderStatus.Delivered) {
+                order.setDeliveredAt(LocalDateTime.now());
+            }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid status value");
         }
         orderRepository.save(order);
         return ResponseEntity.ok().body("Order status updated successfully");
+    }
+
+    @PutMapping("/{id}/assign-partner")
+    public ResponseEntity<?> assignDeliveryPartner(@PathVariable Long id, @RequestBody AssignPartnerRequest assignPartnerRequest) {
+        logger.info("PUT /api/orders/{}/assign-partner called with partnerId: {}", id, assignPartnerRequest.getPartnerId());
+        
+        Order order = orderRepository.findById(id).orElse(null);
+        if (order == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
+        }
+        
+        // Verify the partner exists and is a delivery partner
+        User partner = userRepository.findById(assignPartnerRequest.getPartnerId()).orElse(null);
+        if (partner == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Delivery partner not found");
+        }
+        
+        if (partner.getUserType() != User.UserType.DELIVERY_PARTNER) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User is not a delivery partner");
+        }
+        
+        if (!partner.getIsActive()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Delivery partner is not active");
+        }
+        
+        // Assign the partner and update status to Assigned
+        order.setDeliveryPartnerId(assignPartnerRequest.getPartnerId());
+        order.setStatus(OrderStatus.Assigned);
+        order.setAssignedAt(LocalDateTime.now());
+        orderRepository.save(order);
+        
+        logger.info("Order {} assigned to delivery partner {}", id, assignPartnerRequest.getPartnerId());
+        return ResponseEntity.ok().body("Order assigned to delivery partner successfully");
     }
 
 
@@ -339,5 +390,12 @@ public class OrderController {
         private String status;
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
+    }
+    
+    // DTO for partner assignment
+    public static class AssignPartnerRequest {
+        private Long partnerId;
+        public Long getPartnerId() { return partnerId; }
+        public void setPartnerId(Long partnerId) { this.partnerId = partnerId; }
     }
 }

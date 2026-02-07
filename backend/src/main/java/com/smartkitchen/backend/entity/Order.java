@@ -46,6 +46,15 @@ public class Order {
     @Column(name = "last_modified_at")
     private LocalDateTime lastModifiedAt;
 
+    @Column(name = "delivery_partner_id")
+    private Long deliveryPartnerId;
+
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
     // Address fields copied from User at order time
     @Column(name = "address_label")
     private String addressLabel;
@@ -90,4 +99,13 @@ public class Order {
 
     public LocalDateTime getLastModifiedAt() { return lastModifiedAt; }
     public void setLastModifiedAt(LocalDateTime lastModifiedAt) { this.lastModifiedAt = lastModifiedAt; }
+
+    public Long getDeliveryPartnerId() { return deliveryPartnerId; }
+    public void setDeliveryPartnerId(Long deliveryPartnerId) { this.deliveryPartnerId = deliveryPartnerId; }
+
+    public LocalDateTime getAssignedAt() { return assignedAt; }
+    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
 }

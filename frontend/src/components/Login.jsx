@@ -26,7 +26,13 @@ const Login = () => {
         userType
       });
       login(response.token, response.user);
-      navigate('/dashboard');
+      
+      // Redirect based on user type
+      if (response.user.userType === 'DELIVERY_PARTNER') {
+        navigate(`/delivery-partner/home/${response.user.id}`);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
@@ -64,6 +70,7 @@ const Login = () => {
                 >
                   <option value="RESTAURANT_OWNER">Restaurant Owner</option>
                   <option value="CUSTOMER">Customer</option>
+                  <option value="DELIVERY_PARTNER">Delivery Partner</option>
                 </select>
               </div>
 
