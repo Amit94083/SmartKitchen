@@ -22,7 +22,7 @@ function getCartItemImage(item) {
 
 export default function Checkout() {
   const { cart, cartTotal } = useCart();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [addresses, setAddresses] = useState([]); // Multiple addresses
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -84,6 +84,10 @@ export default function Checkout() {
       setFullAddress("");
       setApt("");
       setDeliveryInstructions("");
+      // Refresh user context to update profile
+      if (refreshUser) {
+        await refreshUser();
+      }
     } catch (err) {
       // handle error, e.g. show alert
       alert('Failed to save address');

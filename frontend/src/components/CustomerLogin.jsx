@@ -24,7 +24,7 @@ const CustomerLogin = () => {
         userType: 'CUSTOMER' 
       });
       login(response.token, response.user);
-      navigate('/home');
+      navigate('/restaurant/1');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {

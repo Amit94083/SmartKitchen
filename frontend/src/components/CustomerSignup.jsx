@@ -34,7 +34,7 @@
       try {
         const response = await authService.signup(formData);
         login(response.token, response.user);
-        navigate('/home');
+        navigate('/restaurant/1');
       } catch (err) {
         if (err.response?.data && typeof err.response.data === 'object') {
           setErrors(err.response.data);

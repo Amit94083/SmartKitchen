@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { userService } from "../services/api";
 import { useLocation } from "react-router-dom";
@@ -6,7 +6,7 @@ import { MapPin, Star, Plus, CreditCard, Headset, LogOut } from "lucide-react";
 import AppHeader from "./AppHeader";
 
 export default function Profile() {
-  const { user, login, logout } = useAuth();
+  const { user, login, logout, refreshUser } = useAuth();
   const location = useLocation();
   const handleLogout = () => {
     logout();
@@ -19,7 +19,12 @@ export default function Profile() {
     apartment: "",
     instructions: ""
   });
-
+  // Fetch latest user data on component mount
+  useEffect(() => {
+    if (refreshUser) {
+      refreshUser();
+    }
+  }, []);
   // Open modal and pre-fill form if updating
   const handleOpenAddressModal = () => {
     if (user?.addressLabel) {
@@ -51,6 +56,10 @@ export default function Profile() {
       const updatedUser = await userService.updateProfile(profileData);
       // Update user context (login expects token and user)
       login(localStorage.getItem('token'), updatedUser);
+      // Also refresh user to ensure data is in sync
+      if (refreshUser) {
+        await refreshUser();
+      }
     } catch (err) {
       alert('Failed to save address');
     }

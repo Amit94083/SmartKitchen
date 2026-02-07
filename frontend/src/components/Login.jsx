@@ -30,6 +30,8 @@ const Login = () => {
       // Redirect based on user type
       if (response.user.userType === 'DELIVERY_PARTNER') {
         navigate(`/delivery-partner/home/${response.user.id}`);
+      } else if (response.user.userType === 'CUSTOMER') {
+        navigate('/restaurant/1');
       } else {
         navigate('/dashboard');
       }

@@ -41,7 +41,13 @@ const Signup = () => {
       const { confirmPassword, ...signupData } = formData;
       const response = await authService.signup(signupData);
       login(response.token, response.user);
-      navigate('/dashboard');
+      
+      // Redirect based on user type
+      if (response.user.userType === 'CUSTOMER' || formData.userType === 'CUSTOMER') {
+        navigate('/restaurant/1');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       console.error('Signup error:', err);
       console.error('Error response:', err.response);
