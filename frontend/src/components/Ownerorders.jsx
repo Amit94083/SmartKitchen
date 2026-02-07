@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Package, Clock, CheckCircle, Truck, X, Check, User, UserCheck } from 'lucide-react';
+import { Search, Bell, Package, Clock, CheckCircle, Truck, X, Check, User, UserCheck, Undo2 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { orderService } from '../services/api';
 
@@ -215,6 +215,42 @@ const Ownerorders = () => {
     }
   };
 
+  // Revert order status handler
+  const handleRevertStatus = async (order) => {
+    try {
+      let previousStatus;
+      // Determine the previous status based on current status
+      switch (order.status) {
+        case 'Confirmed':
+          previousStatus = 'Placed';
+          break;
+        case 'Preparing':
+          previousStatus = 'Confirmed';
+          break;
+        case 'Ready':
+          previousStatus = 'Preparing';
+          break;
+        default:
+          console.warn('No previous status available for', order.status);
+          return;
+      }
+
+      // Call backend to update status
+      await orderService.updateOrderStatus(order.rawId, previousStatus);
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o.id === order.rawId ? { ...o, status: previousStatus } : o
+        )
+      );
+      // Switch to the previous status tab
+      updateActiveTab(previousStatus);
+    } catch (err) {
+      console.error('Error reverting order status:', err);
+      alert('Failed to revert order status. Please try again.');
+    }
+  };
+
   const tabs = [
     { key: 'all', label: 'All', count: transformedOrders.length, icon: Package },
     { key: 'Placed', label: 'Placed', count: transformedOrders.filter(o => o.status === 'Placed').length, icon: Clock },
@@ -422,29 +458,56 @@ const Ownerorders = () => {
                         </button>
                       </>
                     ) : order.status === 'Confirmed' ? (
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded text-xs font-medium hover:bg-blue-600 transition"
-                        onClick={() => handleStartPreparing(order)}
-                      >
-                        <Package className="w-3 h-3" />
-                        Start Preparing
-                      </button>
+                      <>
+                        <button
+                          className="flex items-center gap-1 px-2 py-1 border border-gray-300 text-gray-600 bg-white rounded text-xs font-medium hover:bg-gray-50 transition"
+                          onClick={() => handleRevertStatus(order)}
+                        >
+                          <Undo2 className="w-3 h-3" />
+                          Revert to Placed
+                        </button>
+                        <button
+                          className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded text-xs font-medium hover:bg-blue-600 transition"
+                          onClick={() => handleStartPreparing(order)}
+                        >
+                          <Package className="w-3 h-3" />
+                          Start Preparing
+                        </button>
+                      </>
                     ) : order.status === 'Preparing' ? (
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded text-xs font-medium hover:bg-green-600 transition"
-                        onClick={() => handleReady(order)}
-                      >
-                        <Check className="w-3 h-3" />
-                        Mark Ready
-                      </button>
+                      <>
+                        <button
+                          className="flex items-center gap-1 px-2 py-1 border border-gray-300 text-gray-600 bg-white rounded text-xs font-medium hover:bg-gray-50 transition"
+                          onClick={() => handleRevertStatus(order)}
+                        >
+                          <Undo2 className="w-3 h-3" />
+                          Revert to Confirmed
+                        </button>
+                        <button
+                          className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded text-xs font-medium hover:bg-green-600 transition"
+                          onClick={() => handleReady(order)}
+                        >
+                          <Check className="w-3 h-3" />
+                          Mark Ready
+                        </button>
+                      </>
                     ) : order.status === 'Ready' ? (
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded text-xs font-medium hover:bg-orange-600 transition"
-                        onClick={() => handleAssignDelivery(order)}
-                      >
-                        <Truck className="w-3 h-3" />
-                        Assign Delivery
-                      </button>
+                      <>
+                        <button
+                          className="flex items-center gap-1 px-2 py-1 border border-gray-300 text-gray-600 bg-white rounded text-xs font-medium hover:bg-gray-50 transition"
+                          onClick={() => handleRevertStatus(order)}
+                        >
+                          <Undo2 className="w-3 h-3" />
+                          Revert to Preparing
+                        </button>
+                        <button
+                          className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded text-xs font-medium hover:bg-orange-600 transition"
+                          onClick={() => handleAssignDelivery(order)}
+                        >
+                          <Truck className="w-3 h-3" />
+                          Assign Delivery
+                        </button>
+                      </>
                     ) : null}
                   </div>
                 </div>
