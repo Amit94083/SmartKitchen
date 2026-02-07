@@ -11,6 +11,9 @@ const AssignOrders = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [busyPartnerIds, setBusyPartnerIds] = useState([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingAssignment, setPendingAssignment] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -53,14 +56,13 @@ const AssignOrders = () => {
         )
         .map(order => order.deliveryPartnerId);
       
-      // Filter out busy partners to show only available ones
-      const availablePartners = activePartners.filter(partner => 
-        !busyPartnerIds.includes(partner.id)
-      );
+      // Show all active partners in dropdown
+      const availablePartners = activePartners;
       
       setUnassignedOrders(unassigned);
       setAllPartners(partnersData);
       setAvailablePartners(availablePartners);
+      setBusyPartnerIds(busyPartnerIds);
       setError(null);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -70,30 +72,55 @@ const AssignOrders = () => {
     }
   };
 
-  const handleAssignOrder = async (orderId, partnerId) => {
+  const handlePartnerSelection = (orderId, partnerId) => {
     if (!orderId || !partnerId) {
       return;
     }
 
+    // Check if partner is busy (already has an order assigned)
+    const isBusy = busyPartnerIds.includes(parseInt(partnerId));
+    
+    // Always show confirmation dialog for any partner assignment
+    const partner = availablePartners.find(p => p.id === parseInt(partnerId));
+    setPendingAssignment({ 
+      orderId, 
+      partnerId, 
+      partnerName: partner?.name || 'this partner',
+      isBusy 
+    });
+    setShowConfirmDialog(true);
+  };
+
+  const confirmAssignment = async (orderId, partnerId) => {
     try {
       // Call the actual API to assign the order to the partner
       await orderService.assignDeliveryPartner(orderId, partnerId);
       
-      // Find partner name for better user feedback
-      const partner = availablePartners.find(p => p.id === parseInt(partnerId));
-      const partnerName = partner ? partner.name : 'delivery partner';
-      
       // Remove the assigned order from unassigned list
       setUnassignedOrders(prev => prev.filter(order => order.id !== orderId));
       
-      // Close dropdown
+      // Close dropdown and dialog
       setOpenDropdown(null);
+      setShowConfirmDialog(false);
+      setPendingAssignment(null);
 
-      
+      // Refresh data to update busy status
+      fetchData();
     } catch (error) {
       console.error('Error assigning order:', error);
       setError('Failed to assign order. Please try again.');
     }
+  };
+
+  const handleConfirmAssignment = () => {
+    if (pendingAssignment) {
+      confirmAssignment(pendingAssignment.orderId, pendingAssignment.partnerId);
+    }
+  };
+
+  const handleCancelAssignment = () => {
+    setShowConfirmDialog(false);
+    setPendingAssignment(null);
   };
 
   const toggleDropdown = (orderId) => {
@@ -104,7 +131,7 @@ const AssignOrders = () => {
     return (
       <div className="flex min-h-screen bg-gray-50">
         <DeliverySidebar />
-        <main className="flex-1 p-8 ml-64">
+        <main className="flex-1 py-6 px-6">
           <div className="flex justify-center items-center py-12">
             <div className="text-gray-500">Loading...</div>
           </div>
@@ -117,9 +144,9 @@ const AssignOrders = () => {
     <div className="flex min-h-screen bg-gray-50">
       <DeliverySidebar />
       
-      <main className="flex-1 p-8 ml-64 overflow-y-auto">
+      <main className="flex-1 py-6 px-6 overflow-y-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Assign Orders</h1>
           <p className="text-gray-600">Assign delivery orders to available partners</p>
         </div>
@@ -242,8 +269,8 @@ const AssignOrders = () => {
                         <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
                           {availablePartners.length === 0 ? (
                             <div className="p-4 text-center text-gray-500">
-                              No available partners
-                              <div className="text-xs mt-1">All active partners are currently busy</div>
+                              No active partners found
+                              <div className="text-xs mt-1">Please add delivery partners first</div>
                             </div>
                           ) : (
                             <div className="py-2">
@@ -262,25 +289,32 @@ const AssignOrders = () => {
                                 })()
                               )}
                               
-                              {/* Available partners */}
-                              {availablePartners.filter(p => p.id !== order.deliveryPartnerId).map(partner => (
-                                <button
-                                  key={partner.id}
-                                  onClick={() => handleAssignOrder(order.id, partner.id)}
-                                  className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                      <div className="font-medium text-gray-900">{partner.name}</div>
-                                      <div className="text-sm text-gray-600">{partner.phone}</div>
-                                      <div className="text-xs text-gray-500">{partner.addressFull || 'No address'}</div>
+                              {/* All partners (available and busy) */}
+                              {availablePartners.filter(p => p.id !== order.deliveryPartnerId).map(partner => {
+                                const isBusy = busyPartnerIds.includes(partner.id);
+                                return (
+                                  <button
+                                    key={partner.id}
+                                    onClick={() => handlePartnerSelection(order.id, partner.id)}
+                                    className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <div className="font-medium text-gray-900">{partner.name}</div>
+                                        <div className="text-sm text-gray-600">{partner.phone}</div>
+                                        <div className="text-xs text-gray-500">{partner.addressFull || 'No address'}</div>
+                                      </div>
+                                      <div className={`text-xs px-2 py-1 rounded-full ${
+                                        isBusy 
+                                          ? 'bg-orange-100 text-orange-700' 
+                                          : 'bg-green-100 text-green-700'
+                                      }`}>
+                                        {isBusy ? 'Busy' : 'Available'}
+                                      </div>
                                     </div>
-                                    <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                      Available
-                                    </div>
-                                  </div>
-                                </button>
-                              ))}
+                                  </button>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -293,6 +327,43 @@ const AssignOrders = () => {
           )}
         </div>
       </main>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && pendingAssignment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              {pendingAssignment.isBusy ? 'Partner Already Has Order' : 'Confirm Order Assignment'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {pendingAssignment.isBusy ? (
+                <>
+                  <span className="font-medium">{pendingAssignment.partnerName}</span> already has an order assigned. 
+                  Do you want to assign another order to this partner?
+                </>
+              ) : (
+                <>
+                  Do you want to assign this order to <span className="font-medium">{pendingAssignment.partnerName}</span>?
+                </>
+              )}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelAssignment}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAssignment}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+              >
+                Confirm Assignment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

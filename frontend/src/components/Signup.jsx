@@ -213,7 +213,7 @@ const Signup = () => {
             </button>
           </div>
 
-          <div className="text-center space-y-2">
+          <div className="text-center">
             <span className="text-sm text-gray-600">
               Already have an account?{' '}
               <Link
@@ -223,14 +223,6 @@ const Signup = () => {
                 Sign in here
               </Link>
             </span>
-            <div className="text-sm">
-              <Link
-                to="/customer/signup"
-                className="font-medium text-gray-600 hover:text-gray-500"
-              >
-                Want to sign up as a customer? Register here
-              </Link>
-            </div>
           </div>
         </form>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DeliverySidebar from './DeliverySidebar';
-import { User, Phone, MapPin, Star, Check, X, Search } from 'lucide-react';
+import { User, Phone, MapPin, Star, X, Search } from 'lucide-react';
 import { userService } from '../services/api';
 
 const DeliveryPartners = () => {
@@ -62,22 +62,6 @@ const DeliveryPartners = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const handleStatusUpdate = async (partnerId, newStatus) => {
-    try {
-      const isActive = newStatus === 'Active';
-      await userService.updateUserStatus(partnerId, isActive);
-      
-      // Update local state
-      setPartners(partners.map(partner => 
-        partner.id === partnerId ? { ...partner, status: newStatus, isActive: isActive } : partner
-      ));
-    } catch (error) {
-      console.error('Error updating partner status:', error);
-      // Optionally show error message to user
-      setError('Failed to update partner status. Please try again.');
-    }
-  };
-
   const handleViewDetails = (partner) => {
     setSelectedPartner(partner);
     setShowDetailsModal(true);
@@ -92,9 +76,9 @@ const DeliveryPartners = () => {
     <div className="flex min-h-screen bg-gray-50">
       <DeliverySidebar />
       
-      <main className="flex-1 p-8 ml-64 overflow-y-auto">
+      <main className="flex-1 py-6 px-6 overflow-y-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Delivery Partners</h1>
           <p className="text-gray-600">Manage and monitor delivery team members</p>
         </div>
@@ -202,26 +186,9 @@ const DeliveryPartners = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  {partner.status === 'Active' ? (
-                    <button
-                      onClick={() => handleStatusUpdate(partner.id, 'Inactive')}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                      Deactivate
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleStatusUpdate(partner.id, 'Active')}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      <Check className="w-4 h-4" />
-                      Activate
-                    </button>
-                  )}
                   <button 
                     onClick={() => handleViewDetails(partner)}
-                    className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     View Details
                   </button>
@@ -368,30 +335,7 @@ const DeliveryPartners = () => {
               </div>
               
               {/* Action Buttons */}
-              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
-                {selectedPartner.status === 'Active' ? (
-                  <button
-                    onClick={() => {
-                      handleStatusUpdate(selectedPartner.id, 'Inactive');
-                      closeDetailsModal();
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                    Deactivate Partner
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      handleStatusUpdate(selectedPartner.id, 'Active');
-                      closeDetailsModal();
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    <Check className="w-4 h-4" />
-                    Activate Partner
-                  </button>
-                )}
+              <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
                 <button
                   onClick={closeDetailsModal}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"

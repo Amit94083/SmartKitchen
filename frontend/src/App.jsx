@@ -9,7 +9,6 @@ import Recipes from './components/Recipes';
 import Suppliers from './components/Suppliers';
 import RestaurantDetails from './components/RestaurantDetails';
 
-import LandingPage from './components/LandingPage';
 import Profile from './components/Profile';
 import Login from './components/Login';
 import Signup from './components/Signup';
