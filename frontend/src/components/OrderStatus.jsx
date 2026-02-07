@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Clock, MapPin, DollarSign } from "lucide-react";
 import { orderService } from "../services/api";
 import { imageMap } from "../assets/food/index";
+import useOrderSSE from "../hooks/useOrderSSE";
 
 const ORDER_STEPS = [
   { label: "Placed", key: "Placed", icon: <Clock className="w-6 h-6" /> },
@@ -19,6 +20,19 @@ export default function OrderStatus() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
+  const [allOrders, setAllOrders] = useState([]);
+  
+  // Enable real-time order updates via SSE
+  useOrderSSE(setAllOrders);
+  
+  // When allOrders updates via SSE, check if our order is in there
+  useEffect(() => {
+    const updatedOrder = allOrders.find(o => o.id === parseInt(orderId));
+    if (updatedOrder) {
+      setOrder(updatedOrder);
+      console.log('📦 Order status updated in real-time:', updatedOrder.status);
+    }
+  }, [allOrders, orderId]);
   
   const getDisplayStatus = (status) => {
     return status === "Pending" ? "Placed" : status;
@@ -40,6 +54,52 @@ export default function OrderStatus() {
 
   const displayStatus = getDisplayStatus(order.status);
   const currentStep = ORDER_STEPS.findIndex(s => s.key === displayStatus);
+
+  // Calculate estimated delivery time
+  const getEstimatedDelivery = () => {
+    // If delivered, show actual delivery time
+    if (displayStatus === 'Delivered' && order.deliveredAt) {
+      return {
+        status: 'Delivered',
+        time: new Date(order.deliveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        fullTime: new Date(order.deliveredAt).toLocaleString()
+      };
+    }
+    
+    // If cancelled
+    if (displayStatus === 'Cancelled') {
+      return {
+        status: 'Cancelled',
+        time: 'Order Cancelled',
+        fullTime: null
+      };
+    }
+    
+    // For orders in progress, calculate estimated time
+    if (order.orderTime) {
+      const orderDate = new Date(order.orderTime);
+      // Estimated delivery: 45 minutes from order time
+      const estimatedTime = new Date(orderDate.getTime() + 45 * 60000);
+      
+      const now = new Date();
+      const minutesRemaining = Math.max(0, Math.round((estimatedTime - now) / 60000));
+      
+      return {
+        status: 'InProgress',
+        time: estimatedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        fullTime: estimatedTime.toLocaleString(),
+        minutesRemaining: minutesRemaining
+      };
+    }
+    
+    return {
+      status: 'Unknown',
+      time: '-',
+      fullTime: null
+    };
+  };
+
+  const estimatedDelivery = getEstimatedDelivery();
 
   // Calculate subtotal from order items
   const subtotal = order.orderItems
@@ -76,8 +136,8 @@ export default function OrderStatus() {
           {/* Progress Tracker */}
           <div className="flex items-center justify-between mb-8">
             {ORDER_STEPS.map((step, idx) => {
-              const isCompleted = idx < currentStep;
-              const isCurrent = idx === currentStep;
+              const isCompleted = idx < currentStep || (idx === currentStep && displayStatus === 'Delivered');
+              const isCurrent = idx === currentStep && displayStatus !== 'Delivered';
               const isActive = isCompleted || isCurrent;
               
               return (
@@ -106,25 +166,33 @@ export default function OrderStatus() {
             })}
           </div>
           {/* Estimated Delivery */}
-          <div className="bg-orange-50 rounded-xl p-4 flex items-center gap-3 mb-8">
-            <Clock className="text-orange-500 w-5 h-5" />
-            <div>
-              <div className="text-xs text-gray-500">Estimated Delivery</div>
-              <div className="font-bold text-lg text-orange-600">
-                {(() => {
-                  // If delivered or cancelled, show status
-                  if (displayStatus && ["Delivered", "Cancelled"].includes(displayStatus)) {
-                    return displayStatus;
-                  }
-                  // Otherwise, estimate from orderTime
-                  if (order.orderTime) {
-                    const orderDate = new Date(order.orderTime);
-                    orderDate.setMinutes(orderDate.getMinutes() + 30);
-                    return orderDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                  }
-                  return "-";
-                })()}
+          <div className={`rounded-xl p-4 flex items-center gap-3 mb-8 ${
+            estimatedDelivery.status === 'Cancelled' ? 'bg-red-50' : 'bg-orange-50'
+          }`}>
+            <Clock className={`w-6 h-6 ${
+              estimatedDelivery.status === 'Cancelled' ? 'text-red-500' : 'text-orange-500'
+            }`} />
+            <div className="flex-1">
+              <div className={`text-xs mb-1 ${
+                estimatedDelivery.status === 'Delivered' ? 'text-orange-600 font-semibold' : 'text-gray-500'
+              }`}>
+                {estimatedDelivery.status === 'Delivered' ? 'Delivered At' : 'Estimated Delivery'}
               </div>
+              <div className={`font-bold text-xl ${
+                estimatedDelivery.status === 'Cancelled' ? 'text-red-600' : 'text-orange-600'
+              }`}>
+                {estimatedDelivery.time}
+              </div>
+              {estimatedDelivery.status === 'InProgress' && estimatedDelivery.minutesRemaining > 0 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  (in approximately {estimatedDelivery.minutesRemaining} minutes)
+                </div>
+              )}
+              {estimatedDelivery.status === 'InProgress' && estimatedDelivery.minutesRemaining === 0 && (
+                <div className="text-xs text-green-600 mt-1 font-semibold">
+                  Arriving soon!
+                </div>
+              )}
             </div>
           </div>
           {/* Delivery Address */}

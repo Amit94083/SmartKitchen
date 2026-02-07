@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DeliverySidebar from './DeliverySidebar';
 import { User, MapPin, Clock, Package, Search, ChevronDown } from 'lucide-react';
 import { orderService, userService } from '../services/api';
+import useOrderSSE from '../hooks/useOrderSSE';
 
 const AssignOrders = () => {
   const [unassignedOrders, setUnassignedOrders] = useState([]);
@@ -14,6 +15,16 @@ const AssignOrders = () => {
   const [busyPartnerIds, setBusyPartnerIds] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState(null);
+  const [allOrders, setAllOrders] = useState([]);
+
+  // Enable real-time order updates via SSE
+  useOrderSSE(setAllOrders);
+
+  // Filter unassigned orders when allOrders updates
+  useEffect(() => {
+    const readyOrders = allOrders.filter(order => order.status === 'Ready');
+    setUnassignedOrders(readyOrders);
+  }, [allOrders]);
 
   useEffect(() => {
     fetchData();

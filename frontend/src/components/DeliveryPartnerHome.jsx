@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { orderService, userService } from '../services/api';
 import { Package, Clock, MapPin, Phone, User, Truck, CheckCircle, LogOut, TrendingUp, DollarSign, Star, Navigation, ChevronDown, ChevronUp, Eye, X } from 'lucide-react';
+import useOrderSSE from '../hooks/useOrderSSE';
 
 const DeliveryPartnerHome = () => {
   const { user, logout } = useAuth();
@@ -18,11 +19,47 @@ const DeliveryPartnerHome = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isActive, setIsActive] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [allOrders, setAllOrders] = useState([]);
   const [stats, setStats] = useState({
     activeDeliveries: 0,
     completedToday: 0,
     lifetimeDeliveries: 0
   });
+
+  // Enable real-time order updates via SSE
+  useOrderSSE(setAllOrders);
+
+  // Process orders when allOrders updates via SSE
+  useEffect(() => {
+    if (!userId) return;
+
+    const assignedOrders = allOrders.filter(order => 
+      order.deliveryPartnerId === parseInt(userId) && 
+      ['Assigned', 'OnTheWay'].includes(order.status)
+    );
+    setOrders(assignedOrders);
+
+    // Recalculate stats
+    const today = new Date().toDateString();
+    const completedTodayFiltered = allOrders.filter(order => 
+      order.deliveryPartnerId === parseInt(userId) &&
+      order.status === 'Delivered' &&
+      order.deliveredAt &&
+      new Date(order.deliveredAt).toDateString() === today
+    );
+    const lifetimeFiltered = allOrders.filter(order => 
+      order.deliveryPartnerId === parseInt(userId) && 
+      order.status === 'Delivered'
+    );
+
+    setCompletedTodayOrders(completedTodayFiltered);
+    setLifetimeOrders(lifetimeFiltered);
+    setStats({
+      activeDeliveries: assignedOrders.length,
+      completedToday: completedTodayFiltered.length,
+      lifetimeDeliveries: lifetimeFiltered.length
+    });
+  }, [allOrders, userId]);
 
   useEffect(() => {
     fetchAssignedOrders();
@@ -274,10 +311,10 @@ const DeliveryPartnerHome = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 
-                            className="text-lg font-bold text-gray-900 cursor-pointer hover:text-orange-600 transition-colors"
+                            className="text-lg font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors"
                             onClick={() => setSelectedOrder(order)}
                           >
-                            Order #{order.id}
+                            ORD-{order.id}
                           </h3>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(order.status)} shadow-sm`}>
                             {order.status}
@@ -352,10 +389,10 @@ const DeliveryPartnerHome = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 
-                            className="text-lg font-bold text-gray-900 cursor-pointer hover:text-orange-600 transition-colors"
+                            className="text-lg font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors"
                             onClick={() => setSelectedOrder(order)}
                           >
-                            Order #{order.id}
+                            ORD-{order.id}
                           </h3>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(order.status)} shadow-sm`}>
                             {order.status}
@@ -409,7 +446,7 @@ const DeliveryPartnerHome = () => {
                   <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
                       <Package className="w-6 h-6" />
-                      Order #{selectedOrder.id}
+                      ORD-{selectedOrder.id}
                     </h2>
                     <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(selectedOrder.status)}`}>
                       {selectedOrder.status}
@@ -565,9 +602,9 @@ const DeliveryPartnerHome = () => {
                     {/* Order Header */}
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-orange-600 flex items-center gap-2">
                           <Package className="w-5 h-5 text-orange-500" />
-                          Order #{order.id}
+                          ORD-{order.id}
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">
                           {new Date(order.createdAt).toLocaleDateString()} at{' '}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Bell, Package, Clock, CheckCircle, Truck, X, Check, User, UserCheck, Undo2 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { orderService } from '../services/api';
+import useOrderSSE from '../hooks/useOrderSSE';
 
 const Ownerorders = () => {
   const [activeTab, setActiveTab] = useState('all'); // Always start with 'all' tab
@@ -17,6 +18,9 @@ const Ownerorders = () => {
   const updateActiveTab = (tabKey) => {
     setActiveTab(tabKey);
   };
+
+  // Enable real-time order updates via SSE
+  useOrderSSE(setOrders);
 
   // Fetch orders from backend
   useEffect(() => {

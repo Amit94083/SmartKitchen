@@ -30,6 +30,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import com.smartkitchen.backend.service.OrderEventService;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -48,6 +51,8 @@ public class OrderController {
     private MenuItemRepository menuItemRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private OrderEventService orderEventService;
         /**
          * Update inventory for an order by deducting ingredient quantities based on recipes
          * POST /api/orders/{orderId}/update-inventory
@@ -94,6 +99,18 @@ public class OrderController {
     private com.smartkitchen.backend.service.CartService cartService;
     @PersistenceContext
     private EntityManager entityManager;
+
+    /**
+     * Establishes a Server-Sent Events (SSE) connection for real-time order updates.
+     * Clients connect to this endpoint to receive live order status changes.
+     * 
+     * @return SseEmitter for streaming order updates
+     */
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamOrderUpdates() {
+        logger.info("New SSE connection request for order updates");
+        return orderEventService.addEmitter();
+    }
 
     // GET /api/orders - Return all orders (for admin or general listing)
     @GetMapping("")
@@ -347,7 +364,12 @@ public class OrderController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid status value");
         }
-        orderRepository.save(order);
+        Order updatedOrder = orderRepository.save(order);
+        
+        // Broadcast the order update to all connected SSE clients
+        orderEventService.sendOrderUpdate(updatedOrder);
+        logger.info("Order status update broadcasted to SSE clients");
+        
         return ResponseEntity.ok().body("Order status updated successfully");
     }
 
@@ -378,7 +400,11 @@ public class OrderController {
         order.setDeliveryPartnerId(assignPartnerRequest.getPartnerId());
         order.setStatus(OrderStatus.Assigned);
         order.setAssignedAt(LocalDateTime.now());
-        orderRepository.save(order);
+        Order updatedOrder = orderRepository.save(order);
+        
+        // Broadcast the order update to all connected SSE clients
+        orderEventService.sendOrderUpdate(updatedOrder);
+        logger.info("Order assignment broadcasted to SSE clients");
         
         logger.info("Order {} assigned to delivery partner {}", id, assignPartnerRequest.getPartnerId());
         return ResponseEntity.ok().body("Order assigned to delivery partner successfully");

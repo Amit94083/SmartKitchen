@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ingredientService, analyticsService, orderService, menuService } from '../services/api';
 import Sidebar from './Sidebar';
 import { ShoppingBag, CreditCard, TrendingUp, User, Search, X, Upload } from 'lucide-react';
+import useOrderSSE from '../hooks/useOrderSSE';
 
 const Dashboard = () => {
 
@@ -27,6 +28,9 @@ const Dashboard = () => {
     imageUrl: '',
     isAvailable: true,
   });
+
+  // Enable real-time order updates via SSE
+  useOrderSSE(setOrders);
 
   useEffect(() => {
     const fetchIngredients = async () => {

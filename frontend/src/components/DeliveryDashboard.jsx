@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DeliverySidebar from './DeliverySidebar';
 import { useAuth } from '../context/AuthContext';
 import { authService, orderService } from '../services/api';
+import useOrderSSE from '../hooks/useOrderSSE';
 
 const DeliveryDashboard = () => {
   const { user, refreshUser } = useAuth();
@@ -24,6 +25,18 @@ const DeliveryDashboard = () => {
   });
 
   const [orders, setOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
+
+  // Enable real-time order updates via SSE
+  useOrderSSE(setAllOrders);
+
+  // Filter and process orders when allOrders updates
+  useEffect(() => {
+    const assignedOrders = allOrders.filter(order => 
+      ['Assigned', 'OnTheWay', 'Delivered'].includes(order.status)
+    );
+    setOrders(assignedOrders);
+  }, [allOrders]);
 
   // Auto-refresh user data on component mount
   useEffect(() => {

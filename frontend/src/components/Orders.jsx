@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { orderService } from "../services/api";
 import AppHeader from "./AppHeader";
 import { imageMap } from "../assets/food/index";
+import useOrderSSE from "../hooks/useOrderSSE";
 
 function StatusBadge({ status }) {
   // Map 'pending' from database to 'Placed' for display
@@ -37,6 +38,9 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("active");
   const navigate = useNavigate();
+
+  // Enable real-time order updates via SSE
+  useOrderSSE(setOrders);
 
   useEffect(() => {
     async function fetchOrders() {
