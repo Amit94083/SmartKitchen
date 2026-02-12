@@ -43,14 +43,6 @@ const Sidebar = ({ activeTab }) => {
           <span className={`${activeTab === 'orders' ? 'text-orange-400' : 'text-white'}`}>Orders</span>
         </button>
 
-        {/* Delivery Dashboard */}
-        <button
-          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors ${activeTab === 'delivery-dashboard' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
-          onClick={() => navigate('/delivery/dashboard')}
-        >
-          <Truck className="w-5 h-5" /> Delivery Dashboard
-        </button>
-
         {/* Inventory */}
         <button
           className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors ${activeTab === 'inventory' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
@@ -73,6 +65,14 @@ const Sidebar = ({ activeTab }) => {
           onClick={() => navigate('/suppliers')}
         >
           <Truck className="w-5 h-5" /> Suppliers
+        </button>
+
+        {/* Delivery Dashboard */}
+        <button
+          className={`flex items-center gap-3 rounded-xl px-6 py-3 text-left text-base transition-colors ${activeTab === 'delivery-dashboard' ? 'text-orange-400' : 'text-white'} bg-transparent hover:bg-[#2c2116]`}
+          onClick={() => navigate('/delivery/dashboard')}
+        >
+          <Truck className="w-5 h-5" /> Delivery Dashboard
         </button>
 
         {/* Restaurant Details */}

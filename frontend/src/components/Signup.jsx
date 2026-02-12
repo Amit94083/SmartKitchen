@@ -157,17 +157,21 @@ const Signup = () => {
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number (Optional)
+                Phone Number
               </label>
               <input
                 id="phone"
                 name="phone"
                 type="tel"
+                required
+                pattern="[6-9]\d{9}"
+                title="Please enter a valid 10-digit phone number starting with 6-9"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter your phone number"
+                placeholder="Enter 10-digit phone number"
                 value={formData.phone}
                 onChange={handleChange}
               />
+              <p className="mt-1 text-xs text-gray-500">Format: 10 digits (e.g., 9876543210)</p>
             </div>
 
             <div>

@@ -608,10 +608,13 @@ const DeliveryDashboard = () => {
                   name="phone"
                   value={newPartner.phone}
                   onChange={handleInputChange}
+                  pattern="[6-9]\d{9}"
+                  title="Please enter a valid 10-digit phone number starting with 6-9"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter phone number"
+                  placeholder="10-digit phone number (e.g., 9876543210)"
                   required
                 />
+                <p className="mt-1 text-xs text-gray-500">Format: 10 digits starting with 6-9</p>
               </div>
 
               <div>

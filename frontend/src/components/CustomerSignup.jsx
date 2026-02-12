@@ -112,8 +112,11 @@
                   id="phone"
                   name="phone"
                   type="tel"
+                  required
+                  pattern="[6-9]\d{9}"
+                  title="Please enter a valid 10-digit phone number starting with 6-9"
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Phone number (optional)"
+                  placeholder="10-digit phone number (e.g., 9876543210)"
                   value={formData.phone}
                   onChange={handleChange}
                 />
