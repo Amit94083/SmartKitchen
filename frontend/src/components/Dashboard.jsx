@@ -340,6 +340,14 @@ const Dashboard = () => {
                   (o.id && o.id.toString().includes(q))
                 );
               }
+              
+              // Sort orders by orderTime in descending order (latest first)
+              filtered = filtered.sort((a, b) => {
+                const timeA = a.orderTime ? new Date(a.orderTime).getTime() : 0;
+                const timeB = b.orderTime ? new Date(b.orderTime).getTime() : 0;
+                return timeB - timeA; // Descending order
+              });
+              
               if (filtered.length === 0) {
                 return <div className="bg-white rounded-xl p-4 mb-3 flex justify-between items-center shadow text-gray-500">No orders found</div>;
               }

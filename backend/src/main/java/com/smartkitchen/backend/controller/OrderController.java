@@ -218,6 +218,10 @@ public class OrderController {
         // Clear the user's cart after placing the order
         cartService.clearCart(user.getId());
 
+        // Broadcast the new order to all connected SSE clients (owner dashboard)
+        orderEventService.sendOrderUpdate(saved);
+        logger.info("New order creation broadcasted to SSE clients");
+
         // Build response DTO
         java.util.List<OrderItemDto> itemDtos = saved.getOrderItems().stream().map(item -> {
             MenuItem menuItem = item.getMenuItem();
