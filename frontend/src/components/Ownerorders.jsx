@@ -140,7 +140,6 @@ const Ownerorders = () => {
   // Accept order handler
   const handleAccept = async (order) => {
     try {
-      await orderService.acceptOrderAndUpdateInventory(order.rawId);
       await orderService.updateOrderStatus(order.rawId, 'Confirmed');
       setOrders((prevOrders) =>
         prevOrders.map((o) =>

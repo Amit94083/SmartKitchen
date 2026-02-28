@@ -2,8 +2,8 @@ import Orders from './components/Orders';
 import Ownerorders from './components/Ownerorders';
 import Cart from './components/Cart';
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import Inventory from './components/Inventory';
 import Recipes from './components/Recipes';
 import Suppliers from './components/Suppliers';
@@ -190,11 +190,5 @@ const AppRoutes = () => {
 };
 
 export default function App() {
-  return (
-    <Router>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </Router>
-  );
+  return <AppRoutes />;
 }

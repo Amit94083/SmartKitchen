@@ -1,6 +1,5 @@
 package com.smartkitchen.backend.controller;
 
-import com.smartkitchen.backend.entity.Ingredient;
 import com.smartkitchen.backend.repository.IngredientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

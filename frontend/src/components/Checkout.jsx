@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { userService, orderService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { imageMap } from "../assets/food";
+import axios from "axios";
 
 const DELIVERY_FEE = 40;
 
@@ -21,7 +22,7 @@ function getCartItemImage(item) {
 }
 
 export default function Checkout() {
-  const { cart, cartTotal } = useCart();
+  const { cart, cartTotal, clearCart } = useCart();
   const { user, refreshUser } = useAuth();
   const [addresses, setAddresses] = useState([]); // Multiple addresses
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -99,6 +100,74 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const navigate = useNavigate();
 
+  // Handler for Razorpay payment
+  const handleRazorpayPayment = async () => {
+    try {
+      const totalWithDelivery = cartTotal + DELIVERY_FEE;
+      const response = await axios.post(
+        "http://localhost:8080/api/payment/create-order",
+        { amount: totalWithDelivery }
+      );
+
+      // If response.data is a string, parse it; otherwise use it directly
+      const order = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+
+      const options = {
+        key: "rzp_test_SJFnONl6nfTaU5",
+        amount: order.amount,
+        currency: "INR",
+        name: "Smart Kitchen",
+        description: "Food Order Payment",
+        order_id: order.id,
+        handler: function (response) {
+          alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+          console.log(response);
+          // After successful payment, place the order
+          placeOrderAfterPayment();
+        },
+        theme: {
+          color: "#f97316",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to initialize payment");
+    }
+  };
+
+  // Handler for placing order after payment
+  const placeOrderAfterPayment = async () => {
+    if (!user || !selectedAddress || !cart || !cart.items || cart.items.length === 0) {
+      alert('Missing user, address, or cart data.');
+      return;
+    }
+    const orderData = {
+      userId: user.id,
+      totalAmount: cartTotal + DELIVERY_FEE,
+      addressLabel: selectedAddress.label || selectedAddress.name,
+      addressFull: selectedAddress.full,
+      addressApartment: selectedAddress.apartment,
+      addressInstructions: selectedAddress.instructions,
+      orderItems: cart.items.map(item => ({
+        productName: item.menuItem?.name || item.name,
+        quantity: item.quantity,
+        price: item.menuItem?.price || item.price,
+        menuItemId: item.menuItem?.itemId || item.id 
+      })),
+    };
+    try {
+      const order = await orderService.placeOrder(orderData);
+      await clearCart();
+      navigate(`/order/${order.id}`);
+    } catch (err) {
+      alert('Failed to place order.');
+    }
+  };
+
   // Handler for placing order
   const handlePlaceOrder = async () => {
     if (!user || !selectedAddress || !cart || !cart.items || cart.items.length === 0) {
@@ -111,6 +180,12 @@ export default function Checkout() {
       return;
     } else {
       setAddressError("");
+    }
+    
+    // If Digital Wallet is selected, open Razorpay
+    if (paymentMethod === "wallet") {
+      handleRazorpayPayment();
+      return;
     }
     const orderData = {
       userId: user.id, // Add userId to the request
@@ -128,6 +203,7 @@ export default function Checkout() {
     };
     try {
       const order = await orderService.placeOrder(orderData);
+      await clearCart();
       // Redirect to order status page with real order id
       navigate(`/order/${order.id}`);
     } catch (err) {

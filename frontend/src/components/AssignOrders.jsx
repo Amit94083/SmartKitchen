@@ -16,7 +16,7 @@ const AssignOrders = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
-
+  
   // Enable real-time order updates via SSE
   useOrderSSE(setAllOrders);
 
@@ -104,6 +104,9 @@ const AssignOrders = () => {
 
   const confirmAssignment = async (orderId, partnerId) => {
     try {
+      // Deduct inventory when order is assigned
+      await orderService.acceptOrderAndUpdateInventory(orderId);
+      
       // Call the actual API to assign the order to the partner
       await orderService.assignDeliveryPartner(orderId, partnerId);
       

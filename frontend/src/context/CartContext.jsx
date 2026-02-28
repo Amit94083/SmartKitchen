@@ -78,7 +78,22 @@ export function CartProvider({ children }) {
     setLoading(false);
   };
 
-  const clearCart = () => setCart(null);
+  const clearCart = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      await cartService.clearCart(user.id);
+      // Refetch cart from backend to sync the state
+      const updated = await cartService.getCart(user.id);
+      setCart(updated);
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      // Fallback: set cart to null if error
+      setCart(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Calculate cart count and total from backend cart
   const cartCount = cart?.items?.reduce((sum, i) => sum + i.quantity, 0) || 0;
