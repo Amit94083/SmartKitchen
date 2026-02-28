@@ -1,0 +1,145 @@
+{
+	"info": {
+		"_postman_id": "whatsapp-api-smart-kitchen",
+		"name": "WhatsApp API - Smart Kitchen",
+		"description": "Collection for testing WhatsApp Messages API wrapper",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Send Text Message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"phoneNumber\": \"919876543210\",\n    \"text\": \"Hello! Your order from Smart Kitchen is ready for pickup. Thank you for choosing us!\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/whatsapp/send-text",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"whatsapp",
+						"send-text"
+					]
+				},
+				"description": "Send a plain text message via WhatsApp. \n\nReplace the phoneNumber with your WhatsApp number (with country code, no + sign)."
+			},
+			"response": []
+		},
+		{
+			"name": "Send Template Message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"phoneNumber\": \"919876543210\",\n    \"templateName\": \"hello_world\",\n    \"languageCode\": \"en_US\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/whatsapp/send-template",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"whatsapp",
+						"send-template"
+					]
+				},
+				"description": "Send a WhatsApp template message.\n\nTemplate must be pre-approved in your Meta Business Manager.\n\nCommon language codes:\n- en_US (English - US)\n- en_GB (English - UK)\n- hi (Hindi)\n- es (Spanish)"
+			},
+			"response": []
+		},
+		{
+			"name": "Send Order Notification",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"phoneNumber\": \"919876543210\",\n    \"text\": \"🍕 Order Update\\n\\nOrder #1234\\nStatus: Out for Delivery\\n\\nYour delicious food will reach you in 15 minutes!\\n\\nThank you,\\nSmart Kitchen\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/whatsapp/send-text",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"whatsapp",
+						"send-text"
+					]
+				},
+				"description": "Example: Send order notification to customer"
+			},
+			"response": []
+		},
+		{
+			"name": "Send Delivery Update",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"phoneNumber\": \"919876543210\",\n    \"text\": \"🚴 Delivery Alert\\n\\nHi! Your delivery partner is on the way.\\n\\nEstimated arrival: 10 minutes\\nDelivery Partner: Rahul\\n\\nTrack your order: http://localhost:3000/order/123\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/whatsapp/send-text",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"whatsapp",
+						"send-text"
+					]
+				},
+				"description": "Example: Send delivery update to customer"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}

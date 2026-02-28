@@ -52,36 +52,19 @@ const Inventory = () => {
       });
   }, []);
 
-  // Stock status logic based on percentage
+  // Stock status logic based on threshold
   const getStockStatus = (ingredient) => {
-    const percent = ingredient.maxQuantity && !isNaN(ingredient.maxQuantity)
-      ? (ingredient.currentQuantity / ingredient.maxQuantity) * 100
-      : 0;
-    if (percent <= 25) return { label: 'Low Stock', color: 'bg-red-100 text-red-700', bar: 'bg-red-500' };
-    if (percent > 25 && percent <= 75) return { label: 'Medium', color: 'bg-yellow-100 text-yellow-700', bar: 'bg-yellow-500' };
+    const isLowStock = ingredient.currentQuantity < ingredient.thresholdQuantity;
+    if (isLowStock) {
+      return { label: 'Low Stock', color: 'bg-red-100 text-red-700', bar: 'bg-red-500' };
+    }
     return { label: 'In Stock', color: 'bg-green-100 text-green-700', bar: 'bg-green-500' };
   };
 
-  // Summary stats using percentage-based logic
+  // Summary stats using threshold-based logic
   const totalItems = ingredients.length;
-  const inStock = ingredients.filter(i => {
-    const percent = i.maxQuantity && !isNaN(i.maxQuantity)
-      ? (i.currentQuantity / i.maxQuantity) * 100
-      : 0;
-    return percent > 75;
-  }).length;
-  const mediumStock = ingredients.filter(i => {
-    const percent = i.maxQuantity && !isNaN(i.maxQuantity)
-      ? (i.currentQuantity / i.maxQuantity) * 100
-      : 0;
-    return percent > 25 && percent <= 75;
-  }).length;
-  const lowStock = ingredients.filter(i => {
-    const percent = i.maxQuantity && !isNaN(i.maxQuantity)
-      ? (i.currentQuantity / i.maxQuantity) * 100
-      : 0;
-    return percent <= 25;
-  }).length;
+  const lowStock = ingredients.filter(i => i.currentQuantity < i.thresholdQuantity).length;
+  const inStock = ingredients.filter(i => i.currentQuantity >= i.thresholdQuantity).length;
 
   const handleOpenModal = (tab = 'add', ingredient = null) => {
     setModalTab(tab);
@@ -260,7 +243,7 @@ const Inventory = () => {
           ))}
         </div>
         {/* Summary cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 shadow text-center">
             <div className="text-xl font-bold mb-1">{totalItems}</div>
             <div className="text-xs text-gray-600">Total Items</div>
@@ -268,10 +251,6 @@ const Inventory = () => {
           <div className="bg-white rounded-xl p-4 shadow text-center">
             <div className="text-xl font-bold mb-1" style={{ color: '#16a34a' }}>{inStock}</div>
             <div className="text-xs text-gray-600">In Stock</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow text-center">
-            <div className="text-xl font-bold mb-1" style={{ color: '#f97316' }}>{mediumStock}</div>
-            <div className="text-xs text-gray-600">Medium Stock</div>
           </div>
           <div className="bg-white rounded-xl p-4 shadow text-center">
             <div className="text-xl font-bold mb-1" style={{ color: '#dc2626' }}>{lowStock}</div>

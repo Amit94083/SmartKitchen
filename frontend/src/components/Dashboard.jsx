@@ -36,12 +36,11 @@ const Dashboard = () => {
     const fetchIngredients = async () => {
       try {
         const data = await ingredientService.getAllIngredients();
-        // Low stock: percent <= 25
+        // Low stock: current quantity at or below threshold
         const lowStock = data.filter(i => {
-          const percent = i.maxQuantity && !isNaN(i.maxQuantity)
-            ? (i.currentQuantity / i.maxQuantity) * 100
-            : 0;
-          return percent <= 25;
+          // Check if ingredient has valid threshold and current quantity
+          if (!i.thresholdQuantity || isNaN(i.thresholdQuantity)) return false;
+          return i.currentQuantity <= i.thresholdQuantity;
         });
         setLowStockIngredients(lowStock);
       } catch (err) {
@@ -232,11 +231,26 @@ const Dashboard = () => {
             {lowStockIngredients.length === 0 ? (
               <span className="bg-white rounded-full px-3 py-1 text-sm text-gray-700">No low stock items</span>
             ) : (
-              lowStockIngredients.map(ing => (
-                <span key={ing.ingredientId} className="bg-white rounded-full px-3 py-1 text-xs text-gray-700 shadow-sm border border-gray-200">
-                  <span className="font-semibold">{ing.name}</span>: {ing.currentQuantity}{ing.unit ? ing.unit : ''}
-                </span>
-              ))
+              lowStockIngredients.map(ing => {
+                const percentRemaining = ing.thresholdQuantity 
+                  ? (ing.currentQuantity / ing.thresholdQuantity) * 100 
+                  : 0;
+                const isCritical = percentRemaining <= 50;
+                
+                return (
+                  <span 
+                    key={ing.ingredientId} 
+                    className={`bg-white rounded-full px-3 py-1 text-xs shadow-sm border ${
+                      isCritical ? 'border-red-300 text-red-700' : 'border-gray-200 text-gray-700'
+                    }`}
+                  >
+                    <span className="font-semibold">{ing.name}</span>
+                    {': '}
+                    {ing.currentQuantity}{ing.unit || ''}
+                    {isCritical && ' ⚠️'}
+                  </span>
+                );
+              })
             )}
           </div>
           <div className="flex items-center">
