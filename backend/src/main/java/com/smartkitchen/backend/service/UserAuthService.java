@@ -46,7 +46,18 @@ public class UserAuthService {
         user.setName(signupRequest.getName());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-        user.setPhone(signupRequest.getPhone());
+        
+        // Add +91 prefix for supplier phone numbers if not already present
+        String phoneNumber = signupRequest.getPhone();
+        if (userType == User.UserType.SUPPLIER && phoneNumber != null && !phoneNumber.trim().isEmpty()) {
+            phoneNumber = phoneNumber.trim();
+            // Remove any existing + or country code
+            phoneNumber = phoneNumber.replaceAll("^\\+?91", "");
+            // Add +91 prefix
+            phoneNumber = "91" + phoneNumber;
+        }
+        user.setPhone(phoneNumber);
+        
         user.setUserType(userType);
         user.setAddressLabel(signupRequest.getAddressLabel());
         user.setAddressFull(signupRequest.getAddressFull());

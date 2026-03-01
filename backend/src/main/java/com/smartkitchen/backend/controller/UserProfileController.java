@@ -180,4 +180,82 @@ public class UserProfileController {
                 return ResponseEntity.internalServerError().build();
             }
         }
+        
+        @PutMapping("/{userId}/phone")
+        public ResponseEntity<UserDto> updateUserPhone(@PathVariable Long userId, @RequestBody java.util.Map<String, String> request) {
+            try {
+                String phone = request.get("phone");
+                if (phone == null || phone.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().build();
+                }
+                
+                User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+                
+                // Add 91 prefix for suppliers if not already present
+                if (user.getUserType() == User.UserType.SUPPLIER) {
+                    phone = phone.trim();
+                    if (!phone.startsWith("91")) {
+                        phone = phone.replaceAll("^\\+?91", "");
+                        phone = "91" + phone;
+                    }
+                }
+                
+                user.setPhone(phone);
+                userRepository.save(user);
+                
+                UserDto userDto = new UserDto(
+                    user.getId(),
+                    user.getName(),
+                    user.getEmail(),
+                    user.getPhone(),
+                    user.getUserType().toString(),
+                    user.getRestaurantName(),
+                    user.getAddressLabel(),
+                    user.getAddressFull(),
+                    user.getAddressApartment(),
+                    user.getAddressInstructions(),
+                    user.getIsActive(),
+                    user.getCreatedAt()
+                );
+                
+                return ResponseEntity.ok(userDto);
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError().build();
+            }
+        }
+        
+        @PostMapping("/suppliers/update-phone-prefix")
+        public ResponseEntity<java.util.Map<String, Object>> updateSupplierPhoneNumbers() {
+            try {
+                List<User> suppliers = userRepository.findByUserType(User.UserType.SUPPLIER);
+                int updatedCount = 0;
+                
+                for (User supplier : suppliers) {
+                    String phone = supplier.getPhone();
+                    if (phone != null && !phone.trim().isEmpty()) {
+                        phone = phone.trim();
+                        // Only update if doesn't already start with 91
+                        if (!phone.startsWith("91")) {
+                            supplier.setPhone("91" + phone);
+                            userRepository.save(supplier);
+                            updatedCount++;
+                        }
+                    }
+                }
+                
+                java.util.Map<String, Object> response = new java.util.HashMap<>();
+                response.put("success", true);
+                response.put("message", "Updated " + updatedCount + " supplier phone numbers");
+                response.put("updatedCount", updatedCount);
+                response.put("totalSuppliers", suppliers.size());
+                
+                return ResponseEntity.ok(response);
+            } catch (Exception e) {
+                java.util.Map<String, Object> errorResponse = new java.util.HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Error updating phone numbers: " + e.getMessage());
+                return ResponseEntity.internalServerError().body(errorResponse);
+            }
+        }
 }

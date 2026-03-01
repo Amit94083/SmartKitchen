@@ -15,4 +15,10 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
      */
     @Query("SELECT i FROM Ingredient i WHERE i.currentQuantity <= i.thresholdQuantity AND i.isActive = true")
     List<Ingredient> findLowStockIngredients();
+    
+    /**
+     * Get distinct ingredient types from all active ingredients
+     */
+    @Query("SELECT DISTINCT i.ingredientType FROM Ingredient i WHERE i.isActive = true ORDER BY i.ingredientType")
+    List<String> findDistinctIngredientTypes();
 }

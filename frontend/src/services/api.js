@@ -63,6 +63,10 @@ export const ingredientService = {
     const response = await api.put(`/ingredients/${id}`, ingredientData);
     return response.data;
   },
+  getIngredientTypes: async () => {
+    const response = await api.get('/ingredients/types');
+    return response.data;
+  },
 };
 export const orderService = {
   placeOrder: async (orderData) => {
@@ -145,8 +149,58 @@ export const userService = {
     const response = await api.get('/user/profile/by-type?userType=DELIVERY_PARTNER');
     return response.data;
   },
+  getSuppliers: async () => {
+    const response = await api.get('/user/profile/by-type?userType=SUPPLIER');
+    return response.data;
+  },
+  createSupplier: async (supplierData) => {
+    const response = await api.post('/user/auth/signup', {
+      ...supplierData,
+      userType: 'SUPPLIER'
+    });
+    return response.data;
+  },
   updateUserStatus: async (userId, isActive) => {
     const response = await api.put(`/user/profile/${userId}/status`, { isActive });
+    return response.data;
+  },
+  updateUserPhone: async (userId, phone) => {
+    const response = await api.put(`/user/profile/${userId}/phone`, { phone });
+    return response.data;
+  },
+};
+
+export const supplierCategoryService = {
+  getSupplierCategories: async (userId) => {
+    const response = await api.get(`/supplier-categories/supplier/${userId}`);
+    return response.data;
+  },
+  getSupplierForCategory: async (categoryName) => {
+    const response = await api.get(`/supplier-categories/category/${categoryName}`);
+    return response.data;
+  },
+  addCategoryToSupplier: async (userId, categoryName) => {
+    const response = await api.post(`/supplier-categories/supplier/${userId}/category`, {
+      categoryName
+    });
+    return response.data;
+  },
+  updateSupplierCategories: async (userId, categories) => {
+    const response = await api.put(`/supplier-categories/supplier/${userId}/categories`, {
+      categories
+    });
+    return response.data;
+  },
+  removeCategory: async (categoryName) => {
+    const response = await api.delete(`/supplier-categories/category/${categoryName}`);
+    return response.data;
+  },
+  removeAllCategoriesFromSupplier: async (userId) => {
+    const response = await api.delete(`/supplier-categories/supplier/${userId}/categories`);
+    return response.data;
+  },
+  getAllSupplierCategories: async () => {
+    const response = await api.get('/supplier-categories');
     return response.data;
   },
 };

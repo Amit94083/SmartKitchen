@@ -88,7 +88,7 @@ public class User {
     
     // Enum for user types
     public enum UserType {
-        CUSTOMER, RESTAURANT_OWNER, DELIVERY_PARTNER
+        CUSTOMER, RESTAURANT_OWNER, DELIVERY_PARTNER, SUPPLIER
     }
     
     // Default constructor

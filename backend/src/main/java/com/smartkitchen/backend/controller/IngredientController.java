@@ -37,7 +37,10 @@ public class IngredientController {
                 existing.setIngredientType(ingredient.getIngredientType());
                 existing.setUnit(ingredient.getUnit());
                 existing.setCurrentQuantity(ingredient.getCurrentQuantity());
-                existing.setMaxQuantity(ingredient.getMaxQuantity());
+                // Only update maxQuantity if provided (not null)
+                if (ingredient.getMaxQuantity() != null) {
+                    existing.setMaxQuantity(ingredient.getMaxQuantity());
+                }
                 existing.setThresholdQuantity(ingredient.getThresholdQuantity());
                 existing.setIsActive(ingredient.getIsActive());
                 existing.setLastModifiedAt(LocalDateTime.now());
@@ -45,5 +48,11 @@ public class IngredientController {
                 return ResponseEntity.ok(updated);
             })
             .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<List<String>> getDistinctIngredientTypes() {
+        List<String> ingredientTypes = ingredientRepository.findDistinctIngredientTypes();
+        return ResponseEntity.ok(ingredientTypes);
     }
 }
