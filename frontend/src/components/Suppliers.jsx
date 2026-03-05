@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from './Sidebar';
-import { User, Phone, X, Plus, Edit } from 'lucide-react';
+import { User, Phone, X, Plus, Edit, Trash2 } from 'lucide-react';
 import { userService, supplierCategoryService, ingredientService } from '../services/api';
 
 const Suppliers = () => {
@@ -23,6 +23,37 @@ const Suppliers = () => {
     addressFull: ''
   });
   const [formError, setFormError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState(null);
+    // Delete supplier
+    // Show custom delete confirmation modal
+    const handleDeleteClick = (supplierId) => {
+      setSupplierToDelete(supplierId);
+      setShowDeleteModal(true);
+    };
+
+    // Confirm delete action
+    const confirmDeleteSupplier = async () => {
+      if (!supplierToDelete) return;
+      setDeleteLoading(true);
+      try {
+        await userService.updateUserStatus(supplierToDelete, false);
+        await fetchSuppliers();
+        setShowDeleteModal(false);
+        setSupplierToDelete(null);
+      } catch (error) {
+        alert(error.response?.data?.message || 'Failed to deactivate supplier.');
+      } finally {
+        setDeleteLoading(false);
+      }
+    };
+
+    // Cancel delete action
+    const cancelDeleteSupplier = () => {
+      setShowDeleteModal(false);
+      setSupplierToDelete(null);
+    };
   const [formLoading, setFormLoading] = useState(false);
 
   // Available item categories - fetched from ingredients
@@ -236,7 +267,7 @@ const Suppliers = () => {
           </div>
         ) : (
           <div className="space-y-4 max-w-3xl">
-            {suppliers.map((supplier) => (
+            {suppliers.filter(supplier => supplier.isActive !== false).map((supplier) => (
               <div 
                 key={supplier.id} 
                 className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-100"
@@ -266,6 +297,39 @@ const Suppliers = () => {
                       <Edit className="w-4 h-4" />
                       Update
                     </button>
+                    <button
+                      onClick={() => handleDeleteClick(supplier.id)}
+                      className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                      disabled={deleteLoading}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deleteLoading ? 'Deleting...' : 'Delete'}
+                    </button>
+                        {/* Custom Delete Confirmation Modal */}
+                        {showDeleteModal && (
+                          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-lg">
+                              <h2 className="text-xl font-semibold text-gray-900 mb-4">Deactivate Supplier</h2>
+                              <p className="text-gray-700 mb-6">Are you sure you want to deactivate this supplier? This action will hide the supplier from the list but not permanently delete their data.</p>
+                              <div className="flex justify-end gap-3">
+                                <button
+                                  onClick={cancelDeleteSupplier}
+                                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                  disabled={deleteLoading}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={confirmDeleteSupplier}
+                                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  disabled={deleteLoading}
+                                >
+                                  {deleteLoading ? 'Deactivating...' : 'Deactivate'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                   </div>
                 </div>
               </div>

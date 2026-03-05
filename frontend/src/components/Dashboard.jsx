@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { ingredientService, analyticsService, orderService, menuService } from '../services/api';
+import { ingredientService, analyticsService, orderService, menuService, recipeService } from '../services/api';
 import Sidebar from './Sidebar';
-import { ShoppingBag, CreditCard, TrendingUp, User, Search, X, Upload } from 'lucide-react';
+import { ShoppingBag, CreditCard, TrendingUp, User, Search, X, Upload, Plus, Trash2 } from 'lucide-react';
 import useOrderSSE from '../hooks/useOrderSSE';
 
 const Dashboard = () => {
@@ -28,6 +28,10 @@ const Dashboard = () => {
     imageUrl: '',
     isAvailable: true,
   });
+  const [allIngredients, setAllIngredients] = useState([]);
+  const [recipeIngredients, setRecipeIngredients] = useState([
+    { ingredientId: '', quantityRequired: '' }
+  ]);
 
   // Enable real-time order updates via SSE
   useOrderSSE(setOrders);
@@ -73,10 +77,19 @@ const Dashboard = () => {
         setCategories([]);
       }
     };
+    const fetchAllIngredients = async () => {
+      try {
+        const data = await ingredientService.getAllIngredients();
+        setAllIngredients(data);
+      } catch (err) {
+        setAllIngredients([]);
+      }
+    };
     fetchIngredients();
     fetchBestSellers();
     fetchOrders();
     fetchCategories();
+    fetchAllIngredients();
   }, []);
 
   // Calculate period boundaries
@@ -145,6 +158,24 @@ const Dashboard = () => {
     )).length;
   }
 
+  // Recipe ingredient management functions
+  const handleAddIngredientRow = () => {
+    setRecipeIngredients([...recipeIngredients, { ingredientId: '', quantityRequired: '' }]);
+  };
+
+  const handleRemoveIngredientRow = (index) => {
+    if (recipeIngredients.length > 1) {
+      const newIngredients = recipeIngredients.filter((_, i) => i !== index);
+      setRecipeIngredients(newIngredients);
+    }
+  };
+
+  const handleIngredientChange = (index, field, value) => {
+    const newIngredients = [...recipeIngredients];
+    newIngredients[index][field] = value;
+    setRecipeIngredients(newIngredients);
+  };
+
   const handleAddMenuItem = async (e) => {
     e.preventDefault();
     try {
@@ -159,8 +190,26 @@ const Dashboard = () => {
         deliveryTimeZ: parseInt(newMenuItem.deliveryTimeZ) || 0,
         createdByOwnerId: ownerId,
       };
-      await menuService.createMenuItem(menuItemData);
-      //alert('Menu item added successfully!');
+      const createdItem = await menuService.createMenuItem(menuItemData);
+      
+      // Get valid ingredients for recipe
+      const validIngredients = recipeIngredients.filter(
+        ing => ing.ingredientId && ing.quantityRequired
+      );
+      
+      // If ingredients were added, create recipe automatically
+      if (validIngredients.length > 0) {
+        try {
+          await recipeService.createBatchRecipes({
+            menuItemId: createdItem.itemId || createdItem.id,
+            ingredients: validIngredients
+          });
+        } catch (recipeError) {
+          console.error('Error creating recipe:', recipeError);
+          // Don't block the menu item creation even if recipe fails
+        }
+      }
+      
       setShowAddItemDialog(false);
       setShowCustomCategory(false);
       setCustomCategory('');
@@ -176,6 +225,10 @@ const Dashboard = () => {
         imageUrl: '',
         isAvailable: true,
       });
+      // Reset recipe ingredients
+      setRecipeIngredients([{ ingredientId: '', quantityRequired: '' }]);
+      
+      // Show success message
     } catch (error) {
       console.error('Error adding menu item:', error);
       alert('Failed to add menu item. Please try again.');
@@ -588,6 +641,72 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* Recipe Ingredients Section */}
+                <div className="border-t pt-5 mt-2">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Recipe Ingredients
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">Add ingredients used to make this item</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddIngredientRow}
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 transition"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Ingredient
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                    {recipeIngredients.map((ingredient, index) => (
+                      <div key={index} className="flex gap-3 items-center bg-gray-50 p-3 rounded-lg">
+                        <div className="flex-1">
+                          <select
+                            value={ingredient.ingredientId}
+                            onChange={(e) => handleIngredientChange(index, 'ingredientId', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                          >
+                            <option value="">Select ingredient...</option>
+                            {allIngredients.map((ing) => (
+                              <option key={ing.ingredientId} value={ing.ingredientId}>
+                                {ing.name} ({ing.unit})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="w-28">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Qty"
+                            value={ingredient.quantityRequired}
+                            onChange={(e) => handleIngredientChange(index, 'quantityRequired', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm text-center"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveIngredientRow(index)}
+                          className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition"
+                          disabled={recipeIngredients.length === 1}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {allIngredients.length === 0 && (
+                    <p className="text-xs text-amber-600 mt-2">
+                      No ingredients available. Add ingredients in the Inventory section first.
+                    </p>
+                  )}
+                </div>
+
                 {/* Checkboxes */}
                 <div className="flex gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -614,7 +733,10 @@ const Dashboard = () => {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setShowAddItemDialog(false)}
+                    onClick={() => {
+                      setShowAddItemDialog(false);
+                      setRecipeIngredients([{ ingredientId: '', quantityRequired: '' }]);
+                    }}
                     className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
                   >
                     Cancel

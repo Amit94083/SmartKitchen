@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from './Sidebar';
-import { BookOpen, Clock, Users, X, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, Clock, Users, X, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { recipeService, menuService, ingredientService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
-const Recipes = () => {
+const Recipes = ({ initialMenuItemId, showAddModalOverride, onClose }) => {
+  const navigate = useNavigate();
   const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(!!showAddModalOverride);
   const [menuItems, setMenuItems] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [recipes, setRecipes] = useState([]);
-  const [selectedMenuItem, setSelectedMenuItem] = useState('');
+  const [selectedMenuItem, setSelectedMenuItem] = useState(initialMenuItemId || '');
   const [recipeIngredients, setRecipeIngredients] = useState([
     { ingredientId: '', quantityRequired: '' }
   ]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editableIngredients, setEditableIngredients] = useState([]);
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, recipeId: null, recipeName: '' });
 
   useEffect(() => {
     loadMenuItems();
     loadIngredients();
   }, []);
+
+  // If props change, update modal and selected item
+  useEffect(() => {
+    if (showAddModalOverride) setShowAddModal(true);
+    if (initialMenuItemId) setSelectedMenuItem(initialMenuItemId);
+  }, [showAddModalOverride, initialMenuItemId]);
 
   useEffect(() => {
     if (menuItems.length > 0) {
@@ -162,7 +171,11 @@ const Recipes = () => {
       setShowAddModal(false);
       setSelectedMenuItem('');
       setRecipeIngredients([{ ingredientId: '', quantityRequired: '' }]);
-      loadRecipes(); // Reload recipes after creating new one
+      if (showAddModalOverride) {
+        navigate('/restaurant-dashboard'); // Redirect only if opened as modal from Dashboard
+      } else {
+        loadRecipes(); // Reload recipes after creating new one
+      }
     } catch (error) {
       console.error('Error creating recipe:', error);
       alert('Error creating recipe. Please try again.');
@@ -216,37 +229,7 @@ const Recipes = () => {
     setEditableIngredients(newIngredients);
   };
 
-  const handleSaveUpdatedRecipe = async () => {
-    const validIngredients = editableIngredients.filter(
-      ing => ing.ingredientId && ing.quantityRequired
-    );
-
-    if (validIngredients.length === 0) {
-      alert('Please add at least one ingredient');
-      return;
-    }
-
-    try {
-      // Delete all existing recipes for this menu item first
-      await recipeService.deleteRecipesByMenuItem(selectedRecipe.id);
-      
-      // Then create new ones
-      await recipeService.createBatchRecipes({
-        menuItemId: selectedRecipe.id,
-        ingredients: validIngredients.map(ing => ({
-          ingredientId: ing.ingredientId,
-          quantityRequired: ing.quantityRequired
-        }))
-      });
-      
-      setIsEditMode(false);
-      setSelectedRecipe(null);
-      loadRecipes();
-    } catch (error) {
-      console.error('Error updating recipe:', error);
-      alert('Error updating recipe. Please try again.');
-    }
-  };
+  // ...existing code...
 
   const handleCancelEdit = () => {
     setIsEditMode(false);
@@ -294,9 +277,23 @@ const Recipes = () => {
                         {recipe.category}
                       </span>
                     </div>
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg transition-colors">
-                      <BookOpen size={20} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button className="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg transition-colors">
+                        <BookOpen size={20} />
+                      </button>
+                      {recipe.hasRecipe && (
+                        <button
+                          className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-colors"
+                          title="Delete All Recipes for Item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirm({ show: true, recipeId: recipe.id, recipeName: recipe.name });
+                          }}
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {recipe.description && (
@@ -562,6 +559,7 @@ const Recipes = () => {
                       setShowAddModal(false);
                       setSelectedMenuItem('');
                       setRecipeIngredients([{ ingredientId: '', quantityRequired: '' }]);
+                      if (onClose) onClose();
                     }}
                     className="hover:bg-white/20 p-2 rounded-lg transition-colors"
                   >
@@ -588,11 +586,17 @@ const Recipes = () => {
                     className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-white shadow-sm hover:border-orange-300"
                   >
                     <option value="">-- Select a menu item --</option>
-                    {menuItems.map((item) => (
-                      <option key={item.itemId} value={item.itemId}>
-                        {item.name} ({item.category})
-                      </option>
-                    ))}
+                    {menuItems
+                      .filter((item) => {
+                        // Only show items that don't have a recipe yet
+                        const existingRecipe = recipes.find(r => r.id === item.itemId);
+                        return !existingRecipe || !existingRecipe.hasRecipe;
+                      })
+                      .map((item) => (
+                        <option key={item.itemId} value={item.itemId}>
+                          {item.name} ({item.category})
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -706,6 +710,7 @@ const Recipes = () => {
                       setShowAddModal(false);
                       setSelectedMenuItem('');
                       setRecipeIngredients([{ ingredientId: '', quantityRequired: '' }]);
+                      if (onClose) onClose();
                     }}
                     className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all duration-200 font-semibold"
                   >
@@ -719,6 +724,57 @@ const Recipes = () => {
                     Create Recipe
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Delete Confirmation Modal */}
+        {deleteConfirm.show && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-fadeIn">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <AlertTriangle size={28} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Delete Recipe</h2>
+                    <p className="text-red-100 text-sm mt-1">This action cannot be undone</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6">
+                <p className="text-gray-700 text-lg">
+                  Are you sure you want to delete all recipe ingredients for <span className="font-bold text-gray-900">"{deleteConfirm.recipeName}"</span>?
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
+                  This will remove all ingredient associations for this menu item.
+                </p>
+              </div>
+              
+              {/* Footer */}
+              <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteConfirm({ show: false, recipeId: null, recipeName: '' })}
+                  className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all duration-200 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await recipeService.deleteRecipesByMenuItem(deleteConfirm.recipeId);
+                    setDeleteConfirm({ show: false, recipeId: null, recipeName: '' });
+                    await loadRecipes();
+                  }}
+                  className="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-200 font-bold shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <Trash2 size={18} />
+                  Delete Recipe
+                </button>
               </div>
             </div>
           </div>

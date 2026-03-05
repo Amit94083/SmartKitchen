@@ -71,38 +71,44 @@ public class InventoryMonitorService {
 
     /**
      * Send WhatsApp alert for low stock ingredients to respective suppliers
+     * Groups all ingredients by supplier and sends ONE merged message per supplier
      */
     private void sendLowStockAlert(List<Ingredient> lowStockIngredients) {
         logger.info("Preparing to send WhatsApp alerts to suppliers for {} low stock ingredients", lowStockIngredients.size());
 
-        // Group ingredients by category (ingredient type)
-        Map<String, List<Ingredient>> ingredientsByCategory = lowStockIngredients.stream()
-            .collect(Collectors.groupingBy(Ingredient::getIngredientType));
+        // Group ingredients by supplier - each supplier gets ONE message with ALL their ingredients
+        Map<Long, List<Ingredient>> ingredientsBySupplier = new HashMap<>();
+        List<Ingredient> unassignedIngredients = new ArrayList<>();
 
-        logger.info("Ingredients grouped into {} categories", ingredientsByCategory.size());
-
-        // Send alert to each supplier based on their assigned category
-        for (Map.Entry<String, List<Ingredient>> entry : ingredientsByCategory.entrySet()) {
-            String category = entry.getKey();
-            List<Ingredient> categoryIngredients = entry.getValue();
-
-            logger.info("Processing category '{}' with {} low stock items", category, categoryIngredients.size());
-
+        for (Ingredient ingredient : lowStockIngredients) {
+            String category = ingredient.getIngredientType();
+            
             // Find supplier assigned to this category
             Optional<SupplierCategory> supplierCategoryOpt = supplierCategoryRepository.findByCategoryName(category);
 
             if (supplierCategoryOpt.isEmpty()) {
-                logger.warn("No supplier assigned to category '{}'. Sending to default alert number.", category);
-                sendAlertToDefaultNumber(category, categoryIngredients);
+                logger.warn("No supplier assigned to category '{}' for ingredient '{}'", category, ingredient.getName());
+                unassignedIngredients.add(ingredient);
                 continue;
             }
 
             Long supplierId = supplierCategoryOpt.get().getUserId();
+            ingredientsBySupplier.computeIfAbsent(supplierId, k -> new ArrayList<>()).add(ingredient);
+        }
+
+        logger.info("Ingredients grouped for {} suppliers, {} unassigned ingredients", 
+            ingredientsBySupplier.size(), unassignedIngredients.size());
+
+        // Send merged alert to each supplier
+        for (Map.Entry<Long, List<Ingredient>> entry : ingredientsBySupplier.entrySet()) {
+            Long supplierId = entry.getKey();
+            List<Ingredient> supplierIngredients = entry.getValue();
+
             Optional<User> supplierOpt = userRepository.findById(supplierId);
 
             if (supplierOpt.isEmpty()) {
-                logger.error("Supplier with ID {} not found for category '{}'", supplierId, category);
-                sendAlertToDefaultNumber(category, categoryIngredients);
+                logger.error("Supplier with ID {} not found", supplierId);
+                unassignedIngredients.addAll(supplierIngredients);
                 continue;
             }
 
@@ -110,20 +116,25 @@ public class InventoryMonitorService {
             String supplierPhone = supplier.getPhone();
 
             if (supplierPhone == null || supplierPhone.trim().isEmpty()) {
-                logger.warn("Supplier '{}' has no phone number. Sending to default alert number.", supplier.getName());
-                sendAlertToDefaultNumber(category, categoryIngredients);
+                logger.warn("Supplier '{}' has no phone number. Adding to unassigned.", supplier.getName());
+                unassignedIngredients.addAll(supplierIngredients);
                 continue;
             }
 
-            // Build and send message to supplier
-            sendAlertToSupplier(supplier, category, categoryIngredients);
+            // Build and send merged message to supplier
+            sendMergedAlertToSupplier(supplier, supplierIngredients);
+        }
+
+        // Send unassigned ingredients to default number
+        if (!unassignedIngredients.isEmpty()) {
+            sendUnassignedAlertToDefaultNumber(unassignedIngredients);
         }
     }
 
     /**
-     * Send alert to a specific supplier
+     * Send merged alert to a specific supplier with all their low stock ingredients
      */
-    private void sendAlertToSupplier(User supplier, String category, List<Ingredient> ingredients) {
+    private void sendMergedAlertToSupplier(User supplier, List<Ingredient> ingredients) {
         // Filter ingredients that haven't been alerted in the last 24 hours
         LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
         List<Ingredient> ingredientsToAlert = new ArrayList<>();
@@ -149,23 +160,35 @@ public class InventoryMonitorService {
             return;
         }
         
+        // Group ingredients by category for better organization in the message
+        Map<String, List<Ingredient>> ingredientsByCategory = ingredientsToAlert.stream()
+            .collect(Collectors.groupingBy(Ingredient::getIngredientType));
+        
         StringBuilder message = new StringBuilder();
         message.append(String.format("Hello *%s*,\n\n", supplier.getName()));
-        message.append("We are running out of the following items:\n\n");
+        message.append("We are running low on the following items:\n\n");
 
-        for (Ingredient ingredient : ingredientsToAlert) {
-            message.append(String.format("• %s\n", ingredient.getName()));
+        for (Map.Entry<String, List<Ingredient>> categoryEntry : ingredientsByCategory.entrySet()) {
+            String category = categoryEntry.getKey();
+            List<Ingredient> categoryIngredients = categoryEntry.getValue();
+            
+            message.append(String.format("*%s:*\n", category));
+            for (Ingredient ingredient : categoryIngredients) {
+                message.append(String.format("  • %s\n", ingredient.getName()));
+            }
+            message.append("\n");
         }
 
-        message.append("\nPlease arrange delivery as soon as possible.");
+        message.append("Please arrange delivery as soon as possible.\n");
+        message.append(String.format("Total items: %d", ingredientsToAlert.size()));
 
         // Send WhatsApp message
         try {
             Map<String, Object> result = whatsAppService.sendTextMessage(supplier.getPhone(), message.toString());
             
             if (result.get("success").equals(true)) {
-                logger.info("Low stock alert sent successfully to supplier '{}' ({}) for category '{}' with {} items", 
-                    supplier.getName(), supplier.getPhone(), category, ingredientsToAlert.size());
+                logger.info("Merged low stock alert sent successfully to supplier '{}' ({}) with {} items across {} categories", 
+                    supplier.getName(), supplier.getPhone(), ingredientsToAlert.size(), ingredientsByCategory.size());
                 
                 // Save message records for each ingredient
                 for (Ingredient ingredient : ingredientsToAlert) {
@@ -177,7 +200,7 @@ public class InventoryMonitorService {
                     supplierMessageRepository.save(supplierMessage);
                 }
             } else {
-                logger.error("Failed to send low stock alert to supplier '{}': {}", 
+                logger.error("Failed to send merged low stock alert to supplier '{}': {}", 
                     supplier.getName(), result.get("error"));
             }
         } catch (Exception e) {
@@ -187,9 +210,9 @@ public class InventoryMonitorService {
     }
 
     /**
-     * Send alert to default number when no supplier is assigned
+     * Send alert to default number for unassigned ingredients
      */
-    private void sendAlertToDefaultNumber(String category, List<Ingredient> ingredients) {
+    private void sendUnassignedAlertToDefaultNumber(List<Ingredient> ingredients) {
         // Filter ingredients that haven't been alerted in the last 24 hours (for default number)
         LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
         List<Ingredient> ingredientsToAlert = new ArrayList<>();
@@ -211,27 +234,37 @@ public class InventoryMonitorService {
         
         // If no ingredients to alert, skip sending message
         if (ingredientsToAlert.isEmpty()) {
-            logger.info("No new ingredients to alert to default number - all were recently notified");
+            logger.info("No new unassigned ingredients to alert to default number - all were recently notified");
             return;
         }
         
+        // Group ingredients by category for better organization
+        Map<String, List<Ingredient>> ingredientsByCategory = ingredientsToAlert.stream()
+            .collect(Collectors.groupingBy(Ingredient::getIngredientType));
+        
         StringBuilder message = new StringBuilder();
-        message.append("🚨 *Low Stock Alert* 🚨\n\n");
-        message.append(String.format("*Category: %s* (No supplier assigned)\n\n", category));
-        message.append("We are running out of the following items:\n\n");
+        message.append("🚨 *Low Stock Alert - Unassigned Ingredients* 🚨\n\n");
+        message.append("The following items need supplier assignment:\n\n");
 
-        for (Ingredient ingredient : ingredientsToAlert) {
-            message.append(String.format("• %s\n", ingredient.getName()));
+        for (Map.Entry<String, List<Ingredient>> categoryEntry : ingredientsByCategory.entrySet()) {
+            String category = categoryEntry.getKey();
+            List<Ingredient> categoryIngredients = categoryEntry.getValue();
+            
+            message.append(String.format("*%s (No supplier):*\n", category));
+            for (Ingredient ingredient : categoryIngredients) {
+                message.append(String.format("  • %s\n", ingredient.getName()));
+            }
+            message.append("\n");
         }
 
-        message.append("\nPlease arrange delivery as soon as possible.");
+        message.append("Please assign suppliers or arrange delivery.\n");
+        message.append(String.format("Total items: %d", ingredientsToAlert.size()));
 
         try {
             Map<String, Object> result = whatsAppService.sendTextMessage(alertPhoneNumber, message.toString());
             
             if (result.get("success").equals(true)) {
-                logger.info("Low stock alert sent to default number for unassigned category '{}' with {} items", 
-                    category, ingredientsToAlert.size());
+                logger.info("Unassigned low stock alert sent to default number with {} items", ingredientsToAlert.size());
                 
                 // Save message records with null supplierId (no supplier assigned)
                 for (Ingredient ingredient : ingredientsToAlert) {
@@ -243,7 +276,7 @@ public class InventoryMonitorService {
                     supplierMessageRepository.save(supplierMessage);
                 }
             } else {
-                logger.error("Failed to send low stock alert to default number: {}", result.get("error"));
+                logger.error("Failed to send unassigned alert to default number: {}", result.get("error"));
             }
         } catch (Exception e) {
             logger.error("Error sending WhatsApp alert to default number: {}", e.getMessage(), e);
